@@ -1,7 +1,46 @@
 type CsvValue = string | number | boolean | null | undefined;
 
+/**
+ * Characters that make a spreadsheet treat a cell as a formula rather than text.
+ *
+ * A cell beginning with `=`, `+`, `-` or `@` is executed by Excel, LibreOffice, Google Sheets and
+ * Numbers when the exported file is opened. Because several export paths include
+ * user-controlled values (dataset names, activity titles and references), a name like
+ * `=cmd|'/c calc'!A1` would otherwise become a live payload on the machine of whoever opens the
+ * download. Tab and CR are included because they are stripped by some parsers, which can expose a
+ * leading formula character that looked harmless in the original string.
+ */
+const FORMULA_TRIGGERS = /^[=+\-@\t\r]/;
+
+/**
+ * Neutralises a cell that a spreadsheet would evaluate.
+ *
+ * A single leading apostrophe is prepended, which every spreadsheet treats as a "this is literal
+ * text" marker, and any apostrophe already in the value is doubled so the quoting stays valid.
+ * Prefixing rather than wrapping is deliberate: it is the conventional defence, and it leaves the
+ * readable value intact for anything that inspects the file as text.
+ */
+function neutraliseFormula(text: string): string {
+  return `'${text.replace(/'/g, "''")}`;
+}
+
 function escapeCell(value: CsvValue): string {
   const text = value === null || value === undefined ? '' : String(value);
+
+  // Only *text* can be a formula. A real number such as -42.5 starts with a dash but evaluates
+  // as a number, so neutralising it would turn legitimate figures into text and break the export
+  // for whoever opens it. Only a string reaching a spreadsheet is a potential payload.
+  const isText = typeof value === 'string';
+
+  // Pass 1 (security): a guarded cell is always quoted, never left bare. An unquoted
+  // `'=1+1` relies on every parser honouring the apostrophe convention; quoting it means the
+  // literal-text marker survives even a parser that would otherwise strip it.
+  if (isText && FORMULA_TRIGGERS.test(text)) {
+    return `"${neutraliseFormula(text).replace(/"/g, '""')}"`;
+  }
+
+  // Pass 2 (CSV syntax): quote when the cell contains a comma, quote or newline, and double any
+  // embedded quote.
   return /[",\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
 }
 

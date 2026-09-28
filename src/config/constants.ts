@@ -25,4 +25,3 @@ export const ROLES = ['Admin', 'Analyst', 'Viewer'] as const;
 export const PAGE_SIZE = 8;
 export const MAX_UPLOAD_BYTES = 250 * 1024 * 1024;
 export const MAX_COMPARE_SCENARIOS = 4;
-export const EMAIL_DOMAIN = 'quantelis.lk';

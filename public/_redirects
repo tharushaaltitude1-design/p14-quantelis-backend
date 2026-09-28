@@ -1,0 +1,8 @@
+# Netlify / Cloudflare Pages SPA fallback.
+#
+# Without this, a hard refresh or a shared deep link such as /datasets/12 returns Netlify's 404
+# instead of index.html, and the client-side router never gets a chance to render the page.
+# The client-side router handles 404s itself, so the server must always hand back the shell for
+# non-asset paths.
+
+/*    /index.html   200

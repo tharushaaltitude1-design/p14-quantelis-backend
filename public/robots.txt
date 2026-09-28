@@ -1,0 +1,11 @@
+# Quantelis Workspace is an authenticated application.
+#
+# Every route requires a signed-in session, so nothing here should ever be crawled or cached in
+# a search index. This is the crawler-side half of the control; index.html also carries
+# <meta name="robots" content="noindex, nofollow"> for crawlers that read the page first.
+#
+# If you later add public marketing pages to this host, allow those paths here explicitly and
+# remove noindex from them — do not simply allow everything.
+
+User-agent: *
+Disallow: /

@@ -23,7 +23,7 @@ export function makeAuthValue(overrides: Partial<AuthContextValue> = {}): AuthCo
 export function makeUser(overrides: Partial<User> = {}): User {
   return {
     uid: 'uid-1',
-    email: 'alex.rivera@quantelis.ai',
+    email: 'alex.rivera@quantelis.lk',
     displayName: 'Alex Rivera',
     photoURL: null,
     emailVerified: true,

@@ -199,7 +199,7 @@ export const settings: WorkspaceSettings = {
 
 export const profile: ProfileDetails = {
   fullName: 'Jordan Mitchell',
-  email: 'jordan@quantelis.ai',
+  email: 'jordan@quantelis.lk',
   jobRole: JOB_ROLES[0],
   department: 'Strategic Planning',
   initials: 'JM',
