@@ -5,6 +5,7 @@ import {
   authErrorMessage,
   sendResetEmail as sendReset,
   signInWithEmail,
+  signInWithGoogle as signInWithGoogleUser,
   signOutUser,
   signUpWithEmail,
   updateUserProfile,
@@ -41,6 +42,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await signInWithEmail(email, password);
     } catch (error) {
       throw new Error(authErrorMessage(error, 'We could not sign you in. Please try again.'));
+    }
+  }, []);
+
+  const signInWithGoogle = useCallback(async () => {
+    try {
+      await signInWithGoogleUser();
+    } catch (error) {
+      throw new Error(authErrorMessage(error, 'Google sign-in did not complete. Please try again.'));
     }
   }, []);
 
@@ -87,12 +96,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       profileVersion,
       isDemoMode: !isFirebaseConfigured,
       signIn,
+      signInWithGoogle,
       signUp,
       signOut,
       sendResetEmail,
       updateProfile,
     }),
-    [user, status, profileVersion, signIn, signUp, signOut, sendResetEmail, updateProfile],
+    [user, status, profileVersion, signIn, signInWithGoogle, signUp, signOut, sendResetEmail, updateProfile],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

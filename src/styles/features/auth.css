@@ -94,9 +94,35 @@
 .auth-card-foot { margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--border); color: var(--text-muted); font-size: 0.85rem; text-align: center; }
 .auth-card-foot a { color: var(--accent); font-weight: 600; }
 .auth-card-foot a:hover { text-decoration: underline; }
-.auth-legal { color: var(--text-muted); font-size: 0.75rem; text-align: center; max-width: 400px; }
+.auth-legal { color: var(--text-muted); font-size: 0.75rem; text-align: center; max-width: 400px; line-height: 1.6; }
+.auth-legal a { color: var(--text-dim); text-decoration: underline; text-underline-offset: 2px; }
+.auth-legal a:hover { color: var(--accent); }
 
 .auth-form { display: grid; gap: 16px; }
+
+/* Federated sign-in: white-on-dark keeps it distinct from the indigo primary action. */
+.auth-google {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 11px 16px;
+  border-radius: 8px;
+  background: #fff;
+  color: #1F2937;
+  font-size: 0.85rem;
+  font-weight: 600;
+  border: 1px solid #D6DAE1;
+  transition: filter 0.15s, box-shadow 0.15s;
+}
+.auth-google:hover:not(:disabled) { filter: brightness(0.97); box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25); }
+.auth-google:disabled { opacity: 0.7; cursor: progress; }
+.google-mark { width: 18px; height: 18px; flex-shrink: 0; }
+
+.auth-divider { display: flex; align-items: center; gap: 12px; color: var(--text-muted); font-size: 0.76rem; }
+.auth-divider::before,
+.auth-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
 .auth-field { display: grid; gap: 6px; }
 .auth-label-row { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
 .auth-input-wrap { position: relative; display: flex; align-items: center; }

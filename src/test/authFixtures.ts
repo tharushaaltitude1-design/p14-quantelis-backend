@@ -10,6 +10,7 @@ export function makeAuthValue(overrides: Partial<AuthContextValue> = {}): AuthCo
     profileVersion: 0,
     isDemoMode: false,
     signIn: vi.fn().mockResolvedValue(undefined),
+    signInWithGoogle: vi.fn().mockResolvedValue(undefined),
     signUp: vi.fn().mockResolvedValue({ verificationEmailSent: true }),
     signOut: vi.fn().mockResolvedValue(undefined),
     sendResetEmail: vi.fn().mockResolvedValue(undefined),

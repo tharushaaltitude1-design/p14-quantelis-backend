@@ -1,7 +1,9 @@
 import { FirebaseError } from 'firebase/app';
 import {
+  GoogleAuthProvider,
   sendPasswordResetEmail,
   signInWithEmailAndPassword,
+  signInWithPopup,
   signOut as firebaseSignOut,
   updateProfile as firebaseUpdateProfile,
   createUserWithEmailAndPassword,
@@ -25,7 +27,12 @@ const AUTH_ERROR_MESSAGES: Record<string, string> = {
   'auth/operation-not-allowed': 'Email and password sign-in is disabled for this Firebase project.',
   'auth/too-many-requests': 'Too many attempts. Wait a minute and try again.',
   'auth/network-request-failed': 'Network error. Check your connection and try again.',
-  'auth/popup-closed-by-user': 'The sign-in window closed before finishing.',
+  'auth/popup-closed-by-user': 'The Google sign-in window closed before finishing.',
+  'auth/popup-blocked': 'Your browser blocked the Google sign-in window. Allow pop-ups for this site, then try again.',
+  'auth/cancelled-popup-request': 'Another sign-in window is already open. Finish that one first.',
+  'auth/account-exists-with-different-credential':
+    'An account already uses that email with a different sign-in method. Sign in with your password instead.',
+  'auth/credential-already-in-use': 'Those Google credentials are already linked to another account.',
   'auth/requires-recent-login': 'For security, sign in again before making this change.',
   'auth/user-disabled': 'This account has been disabled. Contact your workspace admin.',
   'auth/quota-exceeded': 'Firebase quota reached. Try again shortly.',
@@ -47,6 +54,21 @@ export type SignUpResult = { user: User; verificationEmailSent: boolean };
 
 export async function signInWithEmail(email: string, password: string): Promise<User> {
   const credential = await signInWithEmailAndPassword(requireAuth(), email.trim(), password);
+  return credential.user;
+}
+
+/**
+ * Google sign-in / sign-up.
+ *
+ * The same call serves both flows: Firebase provisions a Firebase account on first use and
+ * returns the existing one afterwards, and Google's email is already verified, so the
+ * sign-up path can skip the verification email entirely.
+ */
+export async function signInWithGoogle(): Promise<User> {
+  const provider = new GoogleAuthProvider();
+  // Without this, returning users are silently signed into the wrong Google identity.
+  provider.setCustomParameters({ prompt: 'select_account' });
+  const credential = await signInWithPopup(requireAuth(), provider);
   return credential.user;
 }
 

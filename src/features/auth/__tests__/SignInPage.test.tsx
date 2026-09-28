@@ -38,7 +38,7 @@ describe('SignInPage', () => {
 
   it('blocks submission and reports both problems when empty', async () => {
     const { user, auth } = renderPage();
-    await user.click(screen.getByRole('button', { name: /^sign in/i }));
+    await user.click(screen.getByRole('button', { name: /^sign in$/i }));
 
     expect(auth.signIn).not.toHaveBeenCalled();
     expect(await screen.findByText('Enter your email address.')).toBeInTheDocument();
@@ -48,7 +48,7 @@ describe('SignInPage', () => {
   it('rejects a malformed email before calling Firebase', async () => {
     const { user, auth } = renderPage();
     await fillCredentials(user, 'alex@', 'forecast2026');
-    await user.click(screen.getByRole('button', { name: /^sign in/i }));
+    await user.click(screen.getByRole('button', { name: /^sign in$/i }));
 
     expect(auth.signIn).not.toHaveBeenCalled();
     expect(await screen.findByText(/does not look like a valid email/i)).toBeInTheDocument();
@@ -57,7 +57,7 @@ describe('SignInPage', () => {
   it('signs in and returns the user to the page they originally wanted', async () => {
     const { user, auth } = renderPage(makeAuthValue(), '/login');
     await fillCredentials(user, '  alex.rivera@quantelis.ai ', 'forecast2026');
-    await user.click(screen.getByRole('button', { name: /^sign in/i }));
+    await user.click(screen.getByRole('button', { name: /^sign in$/i }));
 
     await waitFor(() => expect(auth.signIn).toHaveBeenCalledWith('alex.rivera@quantelis.ai', 'forecast2026'));
     // No `from` in location state, so the user lands on the overview.
@@ -68,7 +68,7 @@ describe('SignInPage', () => {
     const signIn = vi.fn().mockRejectedValue(new Error('That email and password combination did not match an account.'));
     const { user } = renderPage(makeAuthValue({ signIn }));
     await fillCredentials(user, 'alex.rivera@quantelis.ai', 'wrongpassword');
-    await user.click(screen.getByRole('button', { name: /^sign in/i }));
+    await user.click(screen.getByRole('button', { name: /^sign in$/i }));
 
     const alert = await screen.findByRole('alert');
     expect(alert).toHaveTextContent(/did not match an account/i);
@@ -103,5 +103,41 @@ describe('SignInPage', () => {
   it('warns when Firebase is not configured instead of failing silently', () => {
     renderPage(makeAuthValue({ isDemoMode: true }));
     expect(screen.getByRole('status')).toHaveTextContent(/firebase is not configured/i);
+  });
+
+  it('offers Google sign-in and lands in the workspace on success', async () => {
+    const { user, auth } = renderPage();
+    await user.click(screen.getByRole('button', { name: /sign in with google/i }));
+
+    await waitFor(() => expect(auth.signInWithGoogle).toHaveBeenCalled());
+    expect(auth.signIn).not.toHaveBeenCalled();
+    expect(await screen.findByRole('heading', { name: /overview/i })).toBeInTheDocument();
+  });
+
+  it('explains a blocked Google popup instead of failing silently', async () => {
+    const signInWithGoogle = vi
+      .fn()
+      .mockRejectedValue(new Error('Your browser blocked the Google sign-in window. Allow pop-ups for this site, then try again.'));
+    const { user } = renderPage(makeAuthValue({ signInWithGoogle }));
+    await user.click(screen.getByRole('button', { name: /sign in with google/i }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(/blocked the google sign-in window/i);
+    // The form stays put so the user can retry.
+    expect(screen.getByRole('heading', { name: /sign in to quantelis/i })).toBeInTheDocument();
+  });
+
+  it('links the legal documents and opens them in a new tab', () => {
+    renderPage();
+    const terms = screen.getByRole('link', { name: /terms of service/i });
+    const privacy = screen.getByRole('link', { name: /privacy policy/i });
+
+    expect(terms).toHaveAttribute('href', 'https://quantelis.lk/terms');
+    expect(privacy).toHaveAttribute('href', 'https://quantelis.lk/privacy');
+    for (const link of [terms, privacy]) {
+      expect(link).toHaveAttribute('target', '_blank');
+      // `noopener` stops the opened page reaching back through window.opener.
+      expect(link.getAttribute('rel')).toContain('noopener');
+      expect(link.getAttribute('rel')).toContain('noreferrer');
+    }
   });
 });

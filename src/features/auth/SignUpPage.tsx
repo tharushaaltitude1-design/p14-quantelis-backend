@@ -4,10 +4,11 @@ import { ArrowRight, Eye, EyeOff, Loader2, Lock, Mail, User as UserIcon } from '
 import { useAuth } from '@/state/authContext';
 import { ROUTES } from '@/config/constants';
 import { AuthError, AuthLayout } from './AuthLayout';
+import { AuthDivider, GoogleButton } from './GoogleButton';
 import { hasErrors, passwordStrength, validateSignUp, type FieldErrors } from './validation';
 
 export function SignUpPage() {
-  const { signUp, isDemoMode } = useAuth();
+  const { signUp, signInWithGoogle, isDemoMode } = useAuth();
   const navigate = useNavigate();
 
   const [fullName, setFullName] = useState('');
@@ -18,8 +19,22 @@ export function SignUpPage() {
   const [errors, setErrors] = useState<FieldErrors>({});
   const [formError, setFormError] = useState('');
   const [pending, setPending] = useState(false);
+  const [googlePending, setGooglePending] = useState(false);
 
   const strength = passwordStrength(password);
+
+  const onGoogle = async () => {
+    setFormError('');
+    setGooglePending(true);
+    try {
+      await signInWithGoogle();
+      // A Google account arrives already verified, so it can go straight to the workspace.
+      navigate(ROUTES.overview, { replace: true });
+    } catch (error) {
+      setFormError(error instanceof Error ? error.message : 'Google sign-up did not complete. Please try again.');
+      setGooglePending(false);
+    }
+  };
 
   const onSubmit = async (event: FormEvent) => {
     event.preventDefault();
@@ -62,6 +77,9 @@ export function SignUpPage() {
           </p>
         )}
         <AuthError message={formError} />
+
+        <GoogleButton label="Sign up with Google" pending={googlePending} onClick={() => void onGoogle()} />
+        <AuthDivider children="or sign up with email" />
 
         <div className="auth-field">
           <label className="field-label" htmlFor="signup-name">

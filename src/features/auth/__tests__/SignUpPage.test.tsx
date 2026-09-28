@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
@@ -121,5 +121,38 @@ describe('SignUpPage', () => {
     expect(submit).toBeEnabled();
     await user.click(submit);
     await waitFor(() => expect(auth.signUp).toHaveBeenCalled());
+  });
+
+  it('offers Google sign-up and skips verification since Google already verified the email', async () => {
+    const { user, auth } = renderPage();
+    await user.click(screen.getByRole('button', { name: /sign up with google/i }));
+
+    await waitFor(() => expect(auth.signInWithGoogle).toHaveBeenCalled());
+    expect(auth.signUp).not.toHaveBeenCalled();
+    expect(await screen.findByRole('heading', { name: /overview/i })).toBeInTheDocument();
+  });
+
+  it('surfaces a Google account conflict on the sign-up screen', async () => {
+    const signInWithGoogle = vi
+      .fn()
+      .mockRejectedValue(new Error('An account already uses that email with a different sign-in method. Sign in with your password instead.'));
+    const { user } = renderPage(makeAuthValue({ signInWithGoogle }));
+    await user.click(screen.getByRole('button', { name: /sign up with google/i }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(/different sign-in method/i);
+  });
+
+  it('links the legal documents and opens them in a new tab', () => {
+    renderPage();
+    const terms = screen.getByRole('link', { name: /terms of service/i });
+    const privacy = screen.getByRole('link', { name: /privacy policy/i });
+
+    expect(terms).toHaveAttribute('href', 'https://quantelis.lk/terms');
+    expect(privacy).toHaveAttribute('href', 'https://quantelis.lk/privacy');
+    for (const link of [terms, privacy]) {
+      expect(link).toHaveAttribute('target', '_blank');
+      expect(link.getAttribute('rel')).toContain('noopener');
+      expect(link.getAttribute('rel')).toContain('noreferrer');
+    }
   });
 });

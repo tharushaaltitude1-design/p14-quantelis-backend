@@ -15,6 +15,7 @@ export type AuthContextValue = {
   /** True when no `VITE_FIREBASE_*` config is present, so the app runs on its local demo session. */
   isDemoMode: boolean;
   signIn: (email: string, password: string) => Promise<void>;
+  signInWithGoogle: () => Promise<void>;
   signUp: (input: { fullName: string; email: string; password: string }) => Promise<{ verificationEmailSent: boolean }>;
   signOut: () => Promise<void>;
   sendResetEmail: (email: string) => Promise<void>;

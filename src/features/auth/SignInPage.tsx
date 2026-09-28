@@ -4,12 +4,13 @@ import { ArrowRight, Eye, EyeOff, Loader2, Lock, Mail } from 'lucide-react';
 import { useAuth } from '@/state/authContext';
 import { ROUTES } from '@/config/constants';
 import { AuthError, AuthLayout } from './AuthLayout';
+import { AuthDivider, GoogleButton } from './GoogleButton';
 import { hasErrors, validateSignIn, type FieldErrors } from './validation';
 
 type LocationState = { from?: string };
 
 export function SignInPage() {
-  const { signIn, sendResetEmail, isDemoMode } = useAuth();
+  const { signIn, signInWithGoogle, sendResetEmail, isDemoMode } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const redirectTo = (location.state as LocationState | null)?.from ?? ROUTES.overview;
@@ -21,6 +22,19 @@ export function SignInPage() {
   const [formError, setFormError] = useState('');
   const [notice, setNotice] = useState('');
   const [pending, setPending] = useState(false);
+  const [googlePending, setGooglePending] = useState(false);
+
+  const onGoogle = async () => {
+    setFormError('');
+    setGooglePending(true);
+    try {
+      await signInWithGoogle();
+      navigate(redirectTo, { replace: true });
+    } catch (error) {
+      setFormError(error instanceof Error ? error.message : 'Google sign-in did not complete. Please try again.');
+      setGooglePending(false);
+    }
+  };
 
   const onSubmit = async (event: FormEvent) => {
     event.preventDefault();
@@ -82,6 +96,9 @@ export function SignInPage() {
             {notice}
           </p>
         )}
+
+        <GoogleButton label="Sign in with Google" pending={googlePending} onClick={() => void onGoogle()} />
+        <AuthDivider />
 
         <div className="auth-field">
           <label className="field-label" htmlFor="signin-email">

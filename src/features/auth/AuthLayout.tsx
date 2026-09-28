@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { TrendingUp } from 'lucide-react';
+import { LEGAL_LINKS } from './legalLinks';
 
 /**
  * Split-screen shell shared by Sign in and Sign up.
@@ -42,7 +43,18 @@ export function AuthLayout({ title, subtitle, children, footer }: { title: strin
           {children}
           <div className="auth-card-foot">{footer}</div>
         </div>
-        <p className="auth-legal">By continuing you agree to the Quantelis Terms of Service and Privacy Policy.</p>
+        <p className="auth-legal">
+          {/* `rel="noopener noreferrer"` keeps the opened page from reaching back via window.opener. */}
+          By continuing you agree to our{' '}
+          <a href={LEGAL_LINKS.terms} target="_blank" rel="noopener noreferrer">
+            Terms of Service
+          </a>{' '}
+          and{' '}
+          <a href={LEGAL_LINKS.privacy} target="_blank" rel="noopener noreferrer">
+            Privacy Policy
+          </a>
+          .
+        </p>
       </main>
     </div>
   );
