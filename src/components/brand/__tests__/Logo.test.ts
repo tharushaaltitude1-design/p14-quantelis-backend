@@ -81,20 +81,66 @@ describe('logo styling', () => {
     expect(css()).toMatch(new RegExp(`\\${selector}\\s*\\{[^}]*height:\\s*${expected}`));
   });
 
-  it('gives the sidebar brand a clickable home link', () => {
+  it('gives the sidebar brand a clickable home link with an accessible name', () => {
     expect(css()).toMatch(/\.sidebar-brand-link/);
-    expect(src('components/layout/Sidebar.tsx')).toMatch(/aria-label="Quantelis overview"/);
+    // The name has to say the link leaves the app, otherwise a screen-reader user cannot tell
+    // it is an external navigation away from the dashboard.
+    expect(src('components/layout/Sidebar.tsx')).toMatch(/aria-label="Quantelis website \(opens in a new tab\)"/);
   });
 
   // The aside logo and the card logo are the same asset in the two places the marketing panel is
   // shown or hidden. Exactly one must be visible at a time, or the wordmark appears twice.
   it('shows the aside logo only when the marketing panel is visible', () => {
-    expect(css()).toMatch(/\.auth-aside-logo\s*\{\s*display:\s*none/);
+    expect(css()).toMatch(/\.auth-aside-logo-link\s*\{\s*display:\s*none/);
   });
 
   it('restores the aside logo and hides the card logo at desktop width', () => {
     const min = read('src/styles/responsive.css');
-    expect(min).toMatch(/\.auth-aside-logo\s*\{\s*display:\s*block/);
-    expect(min).toMatch(/\.auth-card-logo\s*\{\s*display:\s*none/);
+    expect(min).toMatch(/\.auth-aside-logo-link\s*\{\s*display:\s*block/);
+    expect(min).toMatch(/\.auth-card-logo-link\s*\{\s*display:\s*none/);
+  });
+});
+
+describe('the wordmark links to the marketing site in a new tab', () => {
+  it('is the only place the site URL is read from, so the link cannot drift', () => {
+    expect(read('src/config/constants.ts')).toMatch(/siteUrl:\s*'https:\/\/quantelis\.lk'/);
+  });
+
+  it.each([
+    ['the sidebar', 'src/components/layout/Sidebar.tsx'],
+    ['the auth layout', 'src/features/auth/AuthLayout.tsx'],
+  ])('takes its href from the shared COMPANY constant in %s', (_label, path) => {
+    const file = read(path);
+    expect(file).toMatch(/href=\{COMPANY\.siteUrl\}/);
+    // A hard-coded marketing URL would be a second source of truth.
+    expect(file).not.toMatch(/https:\/\/quantelis\.lk/);
+  });
+
+  it.each([
+    ['the sidebar', 'src/components/layout/Sidebar.tsx'],
+    ['the auth layout', 'src/features/auth/AuthLayout.tsx'],
+  ])('opens in a new tab with noopener noreferrer in %s', (_label, path) => {
+    const file = read(path);
+    expect(file).toMatch(/target="_blank"/);
+    // Without noopener the opened page gets a handle on window.opener; without noreferrer it
+    // learns the referring URL.
+    expect(file).toMatch(/rel="noopener noreferrer"/);
+  });
+
+  it('keeps the aside copy out of the tab order, because it is inside an aria-hidden panel', () => {
+    const file = read('src/features/auth/AuthLayout.tsx');
+    expect(file).toMatch(/className="auth-aside-logo-link"[\s\S]*?tabIndex=\{-1\}/);
+    expect(file).toMatch(/className="auth-aside-logo-link"[\s\S]*?aria-hidden="true"/);
+  });
+
+  it('leaves the card copy keyboard reachable, with an accessible name', () => {
+    const file = read('src/features/auth/AuthLayout.tsx');
+    expect(file).toMatch(/className="auth-card-logo-link"[\s\S]*?aria-label="Quantelis website \(opens in a new tab\)"/);
+    expect(file).not.toMatch(/className="auth-card-logo-link"[\s\S]{0,300}?tabIndex=\{-1\}/);
+  });
+
+  it('uses a plain anchor rather than a router Link, since it leaves the SPA', () => {
+    const file = read('src/components/layout/Sidebar.tsx');
+    expect(file).not.toMatch(/<Link to=\{ROUTES\.overview\}[^>]*sidebar-brand/);
   });
 });

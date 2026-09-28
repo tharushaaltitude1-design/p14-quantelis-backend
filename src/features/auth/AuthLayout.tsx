@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { Logo } from '@/components/brand/Logo';
+import { COMPANY } from '@/config/constants';
 import { LEGAL_LINKS } from './legalLinks';
 
 /**
@@ -15,9 +16,23 @@ export function AuthLayout({ title, subtitle, children, footer }: { title: strin
       <aside className="auth-aside" aria-hidden="true">
         <div className="auth-aside-glow" />
         <div className="auth-aside-body">
-          {/* Real wordmark. Hidden below 1025px, where `.auth-card-logo` takes over, so the logo
-              is never on screen twice at once. */}
-          <Logo className="auth-aside-logo" alt="" />
+          {/* Real wordmark, linking to the marketing site in a new tab. Hidden below 1025px, where
+              `.auth-card-logo` takes over, so the logo is never on screen twice at once.
+
+              tabIndex={-1} because this sits inside the aria-hidden marketing panel: a control
+              that assistive tech cannot announce must not sit in the tab order, or keyboard users
+              land on a link with no accessible name. It stays mouse-clickable, and the equivalent
+              link in the card head (shown on smaller screens) is the keyboard-reachable one. */}
+          <a
+            className="auth-aside-logo-link"
+            href={COMPANY.siteUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            tabIndex={-1}
+            aria-hidden="true"
+          >
+            <Logo className="auth-aside-logo" alt="" />
+          </a>
           <h2>Forecasting that keeps pace with your planning.</h2>
           <p>
             Quantelis turns raw operational data into validated forecasts, scenario comparisons and an
@@ -34,8 +49,17 @@ export function AuthLayout({ title, subtitle, children, footer }: { title: strin
       <main className="auth-main">
         <div className="auth-card">
           <div className="auth-card-head">
-            {/* Only shown once the marketing panel is hidden, so mobile still gets the brand. */}
-            <Logo className="auth-card-logo" />
+            {/* Only shown once the marketing panel is hidden, so mobile still gets the brand.
+                This is the keyboard-reachable copy of the link. */}
+            <a
+              className="auth-card-logo-link"
+              href={COMPANY.siteUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Quantelis website (opens in a new tab)"
+            >
+              <Logo className="auth-card-logo" />
+            </a>
             <h1>{title}</h1>
             <p>{subtitle}</p>
           </div>

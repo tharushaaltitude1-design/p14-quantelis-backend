@@ -19,7 +19,8 @@
    the cascade (auth.css loads later than this file) and so override it. */
 .brand-logo { display: block; height: 41px; width: auto; }
 .sidebar-brand { padding: 20px 20px 4px; }
-.sidebar-brand-link { display: block; width: fit-content; border-radius: 8px; }
+/* The anchor wraps the wordmark, so it is the box that needs the focus ring and the hit area. */
+.sidebar-brand-link { display: inline-block; width: fit-content; border-radius: 8px; }
 .sidebar-brand-link:focus-visible { outline: 2px solid var(--cyan); outline-offset: 4px; }
 .sidebar-logo { height: 39px; width: auto; }
 

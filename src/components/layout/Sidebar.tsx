@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { NavLink, useNavigate, Link } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 import { BookOpen, Building2, Check, ChevronDown, ChevronRight, CircleHelp, LogOut, Settings, ShieldCheck, User } from 'lucide-react';
 import { NAV_GENERAL, NAV_PRIMARY, type NavItem } from '@/config/nav';
 import { useEscapeKey } from '@/hooks/useEscapeKey';
@@ -11,7 +11,7 @@ import { useAuth } from '@/state/authContext';
 import { Avatar } from '@/components/ui/Avatar';
 import { Logo } from '@/components/brand/Logo';
 import { initialsFor } from '@/lib/initials';
-import { ROUTES } from '@/config/constants';
+import { COMPANY, ROUTES } from '@/config/constants';
 
 const WORKSPACES = [
   { id: 'quantelis-labs', name: 'Quantelis Labs', kind: 'Team workspace', initial: 'Q' },
@@ -151,9 +151,18 @@ export function Sidebar({ mobileOpen, onClose }: { mobileOpen: boolean; onClose:
       {mobileOpen && <button className="sidebar-backdrop" onClick={onClose} aria-label="Close navigation" />}
       <aside className={`sidebar ${mobileOpen ? 'sidebar-open' : ''}`}>
         <div className="sidebar-brand">
-          <Link to={ROUTES.overview} className="sidebar-brand-link" aria-label="Quantelis overview">
+          {/* Points at the marketing site rather than the dashboard, so a click on the wordmark
+              does not navigate away from the app. A plain anchor, not a router <Link>, because
+              this leaves the SPA entirely. */}
+          <a
+            className="sidebar-brand-link"
+            href={COMPANY.siteUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Quantelis website (opens in a new tab)"
+          >
             <Logo className="sidebar-logo" />
-          </Link>
+          </a>
         </div>
         <WorkspaceSwitcher />
         <nav aria-label="Primary">

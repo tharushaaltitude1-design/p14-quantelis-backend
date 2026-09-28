@@ -4,8 +4,8 @@
 /* The marketing panel is hidden below 1025px, so its copy of the wordmark must go too and the
    card copy takes over. Doing this as a pair is what guarantees the logo is never shown twice. */
 @media (min-width: 1025px) {
-  .auth-aside-logo { display: block; }
-  .auth-card-logo { display: none; }
+  .auth-aside-logo-link { display: block; }
+  .auth-card-logo-link { display: none; }
 }
 
 @media (max-width: 1024px) {
