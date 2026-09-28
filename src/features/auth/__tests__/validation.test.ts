@@ -11,7 +11,7 @@ import {
 
 describe('auth validation', () => {
   it('accepts realistic email addresses and rejects malformed ones', () => {
-    expect(validateEmail('alex.rivera@quantelis.ai')).toBeUndefined();
+    expect(validateEmail('alex.rivera@quantelis.lk')).toBeUndefined();
     expect(validateEmail('  jordan+mitchell@company.co.uk  ')).toBeUndefined();
     expect(validateEmail('')).toBe('Enter your email address.');
     expect(validateEmail('nope')).toBe('That does not look like a valid email address.');
@@ -38,9 +38,9 @@ describe('auth validation', () => {
   });
 
   it('only reports the password field missing on sign-in', () => {
-    const errors = validateSignIn({ email: 'alex@quantelis.ai', password: '' });
+    const errors = validateSignIn({ email: 'alex@quantelis.lk', password: '' });
     expect(errors).toEqual({ password: 'Enter your password.' });
-    expect(hasErrors(validateSignIn({ email: 'alex@quantelis.ai', password: 'forecast2026' }))).toBe(false);
+    expect(hasErrors(validateSignIn({ email: 'alex@quantelis.lk', password: 'forecast2026' }))).toBe(false);
   });
 
   it('reads password strength upward and never exceeds four', () => {

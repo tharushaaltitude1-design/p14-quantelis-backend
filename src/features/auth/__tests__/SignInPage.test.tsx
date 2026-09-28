@@ -56,10 +56,10 @@ describe('SignInPage', () => {
 
   it('signs in and returns the user to the page they originally wanted', async () => {
     const { user, auth } = renderPage(makeAuthValue(), '/login');
-    await fillCredentials(user, '  alex.rivera@quantelis.ai ', 'forecast2026');
+    await fillCredentials(user, '  alex.rivera@quantelis.lk ', 'forecast2026');
     await user.click(screen.getByRole('button', { name: /^sign in$/i }));
 
-    await waitFor(() => expect(auth.signIn).toHaveBeenCalledWith('alex.rivera@quantelis.ai', 'forecast2026'));
+    await waitFor(() => expect(auth.signIn).toHaveBeenCalledWith('alex.rivera@quantelis.lk', 'forecast2026'));
     // No `from` in location state, so the user lands on the overview.
     expect(await screen.findByRole('heading', { name: /overview/i })).toBeInTheDocument();
   });
@@ -67,7 +67,7 @@ describe('SignInPage', () => {
   it('surfaces a friendly message instead of a raw Firebase error code', async () => {
     const signIn = vi.fn().mockRejectedValue(new Error('That email and password combination did not match an account.'));
     const { user } = renderPage(makeAuthValue({ signIn }));
-    await fillCredentials(user, 'alex.rivera@quantelis.ai', 'wrongpassword');
+    await fillCredentials(user, 'alex.rivera@quantelis.lk', 'wrongpassword');
     await user.click(screen.getByRole('button', { name: /^sign in$/i }));
 
     const alert = await screen.findByRole('alert');
@@ -85,10 +85,10 @@ describe('SignInPage', () => {
 
   it('sends a reset email for a valid address without revealing whether it exists', async () => {
     const { user, auth } = renderPage();
-    await user.type(screen.getByLabelText(/work email/i), 'alex.rivera@quantelis.ai');
+    await user.type(screen.getByLabelText(/work email/i), 'alex.rivera@quantelis.lk');
     await user.click(screen.getByRole('button', { name: /forgot password/i }));
 
-    await waitFor(() => expect(auth.sendResetEmail).toHaveBeenCalledWith('alex.rivera@quantelis.ai'));
+    await waitFor(() => expect(auth.sendResetEmail).toHaveBeenCalledWith('alex.rivera@quantelis.lk'));
     expect(await screen.findByRole('status')).toHaveTextContent(/if that address has an account/i);
   });
 

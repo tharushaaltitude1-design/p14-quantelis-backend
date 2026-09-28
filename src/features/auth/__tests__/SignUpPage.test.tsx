@@ -53,7 +53,7 @@ describe('SignUpPage', () => {
 
   it('flags a confirmation that does not match a real password', async () => {
     const { user, auth } = renderPage();
-    await fillForm(user, { name: 'Alex Rivera', email: 'alex@quantelis.ai', password: 'forecast2026', confirm: 'forecast2025' });
+    await fillForm(user, { name: 'Alex Rivera', email: 'alex@quantelis.lk', password: 'forecast2026', confirm: 'forecast2025' });
     await user.click(screen.getByRole('button', { name: /create account/i }));
 
     expect(auth.signUp).not.toHaveBeenCalled();
@@ -62,7 +62,7 @@ describe('SignUpPage', () => {
 
   it('rejects a weak password and a mismatched confirmation', async () => {
     const { user, auth } = renderPage();
-    await fillForm(user, { name: 'Alex Rivera', email: 'alex@quantelis.ai', password: 'abc', confirm: 'different1' });
+    await fillForm(user, { name: 'Alex Rivera', email: 'alex@quantelis.lk', password: 'abc', confirm: 'different1' });
     await user.click(screen.getByRole('button', { name: /create account/i }));
 
     expect(auth.signUp).not.toHaveBeenCalled();
@@ -72,11 +72,11 @@ describe('SignUpPage', () => {
 
   it('creates the account and sends the user to verify their email', async () => {
     const { user, auth } = renderPage();
-    await fillForm(user, { name: 'Alex Rivera', email: 'alex.rivera@quantelis.ai', password: 'forecast2026', confirm: 'forecast2026' });
+    await fillForm(user, { name: 'Alex Rivera', email: 'alex.rivera@quantelis.lk', password: 'forecast2026', confirm: 'forecast2026' });
     await user.click(screen.getByRole('button', { name: /create account/i }));
 
     await waitFor(() =>
-      expect(auth.signUp).toHaveBeenCalledWith({ fullName: 'Alex Rivera', email: 'alex.rivera@quantelis.ai', password: 'forecast2026' }),
+      expect(auth.signUp).toHaveBeenCalledWith({ fullName: 'Alex Rivera', email: 'alex.rivera@quantelis.lk', password: 'forecast2026' }),
     );
     expect(await screen.findByRole('heading', { name: /profile/i })).toBeInTheDocument();
   });
@@ -84,7 +84,7 @@ describe('SignUpPage', () => {
   it('goes straight to the workspace when no verification email could be sent', async () => {
     const auth = makeAuthValue({ signUp: async () => ({ verificationEmailSent: false }) });
     const { user } = renderPage(auth);
-    await fillForm(user, { name: 'Alex Rivera', email: 'alex.rivera@quantelis.ai', password: 'forecast2026', confirm: 'forecast2026' });
+    await fillForm(user, { name: 'Alex Rivera', email: 'alex.rivera@quantelis.lk', password: 'forecast2026', confirm: 'forecast2026' });
     await user.click(screen.getByRole('button', { name: /create account/i }));
 
     expect(await screen.findByRole('heading', { name: /overview/i })).toBeInTheDocument();
@@ -93,7 +93,7 @@ describe('SignUpPage', () => {
   it('surfaces the duplicate-account error from Firebase', async () => {
     const auth = makeAuthValue({ signUp: async () => { throw new Error('An account already exists for that email. Sign in instead.'); } });
     const { user } = renderPage(auth);
-    await fillForm(user, { name: 'Alex Rivera', email: 'taken@quantelis.ai', password: 'forecast2026', confirm: 'forecast2026' });
+    await fillForm(user, { name: 'Alex Rivera', email: 'taken@quantelis.lk', password: 'forecast2026', confirm: 'forecast2026' });
     await user.click(screen.getByRole('button', { name: /create account/i }));
 
     expect(await screen.findByRole('alert')).toHaveTextContent(/already exists for that email/i);
@@ -115,7 +115,7 @@ describe('SignUpPage', () => {
   it('disables the submit button only while the request is in flight', async () => {
     const auth = makeAuthValue();
     const { user } = renderPage(auth);
-    await fillForm(user, { name: 'Alex Rivera', email: 'alex.rivera@quantelis.ai', password: 'forecast2026', confirm: 'forecast2026' });
+    await fillForm(user, { name: 'Alex Rivera', email: 'alex.rivera@quantelis.lk', password: 'forecast2026', confirm: 'forecast2026' });
 
     const submit = screen.getByRole('button', { name: /create account/i });
     expect(submit).toBeEnabled();

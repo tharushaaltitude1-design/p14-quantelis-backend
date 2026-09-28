@@ -1,5 +1,8 @@
 /* === Shell === */
-.app-shell { display: flex; min-height: 100vh; }
+/* `vh` is declared first as the fallback, then `dvh` so mobile browsers size the shell to the
+   area actually visible once the URL bar is accounted for. Without this the shell is taller than
+   the viewport and the bottom of the page hides behind the browser chrome. */
+.app-shell { display: flex; min-height: 100vh; min-height: 100dvh; }
 .main-content { flex: 1; min-width: 0; margin-left: 264px; display: flex; flex-direction: column; }
 
 /* === Sidebar === */
@@ -7,7 +10,20 @@
   position: fixed; left: 0; top: 0; bottom: 0; width: 264px; background: var(--sidebar-bg);
   border-right: 1px solid var(--border); display: flex; flex-direction: column; z-index: var(--z-sidebar);
 }
-.workspace-switch { display: flex; align-items: center; gap: 10px; width: calc(100% - 28px); margin: 20px 14px 8px; padding: 10px 12px; border-radius: 10px; background: var(--surface); border: 1px solid var(--border); text-align: left; transition: border-color 0.15s; }
+/* Brand strip. The wordmark is a transparent PNG sized by height, so it drops straight onto the
+   sidebar background with no plate or border. The link keeps a real focus ring for keyboard users;
+   the top margin leaves the same breathing room the workspace switcher previously had.
+
+   `.brand-logo` is the base for every placement of the wordmark, so a new placement gets a sane
+   size automatically instead of rendering a 1500px-wide image. Placement rules come after it in
+   the cascade (auth.css loads later than this file) and so override it. */
+.brand-logo { display: block; height: 28px; width: auto; }
+.sidebar-brand { padding: 20px 20px 4px; }
+.sidebar-brand-link { display: block; width: fit-content; border-radius: 8px; }
+.sidebar-brand-link:focus-visible { outline: 2px solid var(--cyan); outline-offset: 4px; }
+.sidebar-logo { height: 26px; width: auto; }
+
+.workspace-switch { display: flex; align-items: center; gap: 10px; width: calc(100% - 28px); margin: 12px 14px 8px; padding: 10px 12px; border-radius: 10px; background: var(--surface); border: 1px solid var(--border); text-align: left; transition: border-color 0.15s; }
 .workspace-switch:hover { border-color: var(--border-strong); }
 .workspace-switch > span:nth-child(2) { min-width: 0; }
 .workspace-icon { width: 30px; height: 30px; border-radius: 7px; background: var(--accent); display: grid; place-items: center; font-weight: 700; font-size: 0.85rem; }
@@ -100,3 +116,31 @@
 .live-indicator i { width: 7px; height: 7px; border-radius: 50%; background: var(--success); box-shadow: 0 0 0 3px var(--success-soft, rgba(16,185,129,0.2)); }
 .select-control { background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: 8px 12px; border-radius: 8px; font-size: 0.85rem; outline: none; }
 
+
+/* === Skip link ===
+   Visually hidden until focused, then pinned to the top-left. The focus ring is kept because a
+   skip link that appears without one is unusable for keyboard users. It is the first focusable
+   element in the shell, so it is reached with a single Tab. */
+.skip-link {
+  position: fixed;
+  top: 8px;
+  left: 8px;
+  z-index: var(--z-modal, 1000);
+  padding: 10px 16px;
+  border-radius: 8px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-decoration: none;
+  transform: translateY(-200%);
+  transition: transform 120ms ease;
+}
+.skip-link:focus {
+  transform: translateY(0);
+  outline: 2px solid var(--cyan);
+  outline-offset: 2px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .skip-link { transition: none; }
+}

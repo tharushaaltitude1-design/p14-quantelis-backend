@@ -5,6 +5,7 @@
 
 .auth-shell {
   min-height: 100vh;
+  min-height: 100dvh;
   display: grid;
   grid-template-columns: 1.05fr 1fr;
   background: var(--bg);
@@ -31,17 +32,10 @@
   pointer-events: none;
 }
 .auth-aside-body { position: relative; max-width: 460px; }
-.auth-aside-mark {
-  width: 42px;
-  height: 42px;
-  border-radius: 11px;
-  display: grid;
-  place-items: center;
-  color: #fff;
-  background: linear-gradient(135deg, var(--accent), var(--cyan));
-  margin-bottom: 26px;
-  box-shadow: 0 10px 30px rgba(79, 70, 229, 0.35);
-}
+/* The wordmark is the full 3:1 lockup, so it is sized by height and given the same bottom gap the
+   old square mark used to provide. Hidden by default: the marketing panel only exists at 1025px
+   and up, and responsive.css turns it back on there. */
+.auth-aside-logo { display: none; height: 30px; width: auto; margin-bottom: 26px; }
 .auth-aside h2 {
   font-size: 1.9rem;
   line-height: 1.2;
@@ -79,16 +73,10 @@
 }
 .auth-card { width: 100%; max-width: 400px; }
 .auth-card-head { margin-bottom: 26px; }
-.auth-mark {
-  width: 38px;
-  height: 38px;
-  border-radius: 10px;
-  display: grid;
-  place-items: center;
-  color: #fff;
-  background: linear-gradient(135deg, var(--accent), var(--cyan));
-  margin-bottom: 18px;
-}
+/* Shown only while `.auth-aside` is hidden (see responsive.css), so the wordmark is on screen
+   exactly once. `margin-bottom: auto` pushes the h1 down so the gap below the logo matches the
+   gap the old 38px square mark used to create. */
+.auth-card-logo { display: block; height: 30px; width: auto; margin-bottom: 22px; }
 .auth-card-head h1 { font-size: 1.5rem; letter-spacing: -0.02em; margin-bottom: 6px; }
 .auth-card-head p { color: var(--text-muted); font-size: 0.88rem; }
 .auth-card-foot { margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--border); color: var(--text-muted); font-size: 0.85rem; text-align: center; }

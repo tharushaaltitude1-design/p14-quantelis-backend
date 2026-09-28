@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { ArrowRight, Eye, EyeOff, Loader2, Lock, Mail } from 'lucide-react';
 import { useAuth } from '@/state/authContext';
 import { ROUTES } from '@/config/constants';
+import { safeReturnTo } from '@/lib/redirect';
 import { AuthError, AuthLayout } from './AuthLayout';
 import { AuthDivider, GoogleButton } from './GoogleButton';
 import { hasErrors, validateSignIn, type FieldErrors } from './validation';
@@ -13,7 +14,9 @@ export function SignInPage() {
   const { signIn, signInWithGoogle, sendResetEmail, isDemoMode } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const redirectTo = (location.state as LocationState | null)?.from ?? ROUTES.overview;
+  // `from` is untrusted: the guard writes it, but a crafted `state` or a future callback route
+  // could put anything here, and `navigate()` honours absolute URLs. Sanitise before use.
+  const redirectTo = safeReturnTo((location.state as LocationState | null)?.from, ROUTES.overview);
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');

@@ -15,7 +15,10 @@ export function AppShell({ children }: { children: ReactNode }) {
   return (
     <div className="app-shell">
       <Sidebar mobileOpen={navOpen} onClose={() => setNavOpen(false)} />
-      <main className="main-content">
+      <a className="skip-link" href="#main-content">
+        Skip to main content
+      </a>
+      <main className="main-content" id="main-content" tabIndex={-1}>
         <Topbar onOpenNav={() => setNavOpen(true)} />
         {children}
       </main>

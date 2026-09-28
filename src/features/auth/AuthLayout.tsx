@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { TrendingUp } from 'lucide-react';
+import { Logo } from '@/components/brand/Logo';
 import { LEGAL_LINKS } from './legalLinks';
 
 /**
@@ -15,9 +15,9 @@ export function AuthLayout({ title, subtitle, children, footer }: { title: strin
       <aside className="auth-aside" aria-hidden="true">
         <div className="auth-aside-glow" />
         <div className="auth-aside-body">
-          <div className="auth-aside-mark">
-            <TrendingUp size={20} />
-          </div>
+          {/* Real wordmark. Hidden below 1025px, where `.auth-card-logo` takes over, so the logo
+              is never on screen twice at once. */}
+          <Logo className="auth-aside-logo" alt="" />
           <h2>Forecasting that keeps pace with your planning.</h2>
           <p>
             Quantelis turns raw operational data into validated forecasts, scenario comparisons and an
@@ -34,9 +34,8 @@ export function AuthLayout({ title, subtitle, children, footer }: { title: strin
       <main className="auth-main">
         <div className="auth-card">
           <div className="auth-card-head">
-            <div className="auth-mark" aria-hidden="true">
-              <TrendingUp size={18} />
-            </div>
+            {/* Only shown once the marketing panel is hidden, so mobile still gets the brand. */}
+            <Logo className="auth-card-logo" />
             <h1>{title}</h1>
             <p>{subtitle}</p>
           </div>
