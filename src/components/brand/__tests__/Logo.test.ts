@@ -70,6 +70,17 @@ describe('logo styling', () => {
     }
   });
 
+  // Guards the agreed sizes. The wordmark is a 3:1 lockup, so the height is what actually sets
+  // how large it reads; a regression here is invisible in the source but obvious on screen.
+  it.each([
+    ['the base size', '.brand-logo', '41px'],
+    ['the sidebar', '.sidebar-logo', '39px'],
+    ['the sign-in and sign-up screens', '.auth-aside-logo', '43px'],
+    ['the auth card on mobile', '.auth-card-logo', '43px'],
+  ])('renders %s at the agreed size', (_label, selector, expected) => {
+    expect(css()).toMatch(new RegExp(`\\${selector}\\s*\\{[^}]*height:\\s*${expected}`));
+  });
+
   it('gives the sidebar brand a clickable home link', () => {
     expect(css()).toMatch(/\.sidebar-brand-link/);
     expect(src('components/layout/Sidebar.tsx')).toMatch(/aria-label="Quantelis overview"/);

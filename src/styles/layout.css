@@ -17,11 +17,11 @@
    `.brand-logo` is the base for every placement of the wordmark, so a new placement gets a sane
    size automatically instead of rendering a 1500px-wide image. Placement rules come after it in
    the cascade (auth.css loads later than this file) and so override it. */
-.brand-logo { display: block; height: 28px; width: auto; }
+.brand-logo { display: block; height: 41px; width: auto; }
 .sidebar-brand { padding: 20px 20px 4px; }
 .sidebar-brand-link { display: block; width: fit-content; border-radius: 8px; }
 .sidebar-brand-link:focus-visible { outline: 2px solid var(--cyan); outline-offset: 4px; }
-.sidebar-logo { height: 26px; width: auto; }
+.sidebar-logo { height: 39px; width: auto; }
 
 .workspace-switch { display: flex; align-items: center; gap: 10px; width: calc(100% - 28px); margin: 12px 14px 8px; padding: 10px 12px; border-radius: 10px; background: var(--surface); border: 1px solid var(--border); text-align: left; transition: border-color 0.15s; }
 .workspace-switch:hover { border-color: var(--border-strong); }
