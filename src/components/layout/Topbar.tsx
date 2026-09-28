@@ -5,8 +5,10 @@ import { pageMeta } from './pageMeta';
 import { NotificationsMenu } from './NotificationsMenu';
 import { GlobalSearch } from './GlobalSearch';
 import { Menu, type MenuEntry } from '@/components/ui/Menu';
+import { Avatar } from '@/components/ui/Avatar';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { useCommandHotkey } from '@/hooks/useCommandHotkey';
+import { initialsFor } from '@/lib/initials';
 import { useWorkspace, useWorkspaceDispatch } from '@/state/workspaceContext';
 import { useAuth } from '@/state/authContext';
 import { ROUTES } from '@/config/constants';
@@ -25,16 +27,12 @@ export function Topbar({ onOpenNav }: { onOpenNav: () => void }) {
   useCommandHotkey(toggleSearch);
 
   // The Firebase account is the source of truth for identity; the workspace store keeps the
-  // richer profile fields (role, department) that Firebase Auth does not model.
+  // richer profile fields (role, department) that Firebase Auth does not model. Reading the
+  // live `user` here (rather than the store) avoids a flash of the seeded name on first paint,
+  // before `useProfileSync` has run.
   const displayName = user?.displayName || profile.fullName;
-  const initials = user?.displayName
-    ? user.displayName
-        .split(/\s+/)
-        .filter(Boolean)
-        .slice(0, 2)
-        .map((part) => part[0]?.toUpperCase() ?? '')
-        .join('')
-    : profile.initials;
+  const initials = user?.displayName ? initialsFor(user.displayName) : profile.initials;
+  const avatarSrc = user?.photoURL ?? profile.photoURL;
 
   const performSignOut = useCallback(async () => {
     try {
@@ -94,9 +92,7 @@ export function Topbar({ onOpenNav }: { onOpenNav: () => void }) {
           entries={accountEntries}
           trigger={(props) => (
             <button {...props} type="button" className="profile-mini" aria-label="Open account menu">
-              <span className="avatar avatar-small" title={displayName}>
-                {initials}
-              </span>
+              <Avatar name={displayName} initials={initials} src={avatarSrc} size="small" />
               <ChevronDown size={14} />
             </button>
           )}

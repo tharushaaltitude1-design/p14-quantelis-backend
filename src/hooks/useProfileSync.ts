@@ -30,6 +30,9 @@ export function useProfileSync(): void {
         ...(displayName ? { fullName: displayName } : {}),
         ...(user.email ? { email: user.email } : {}),
         ...(initials ? { initials } : {}),
+        // Carries the Google account avatar (or a previously uploaded photo) into the store.
+        // `?? null` matters: a cleared photo must overwrite the previous URL, not be skipped.
+        photoURL: user.photoURL ?? null,
       },
     });
   }, [user, profileVersion, dispatch]);

@@ -8,6 +8,8 @@ import { Popover } from '@/components/ui/Popover';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { useWorkspace, useWorkspaceDispatch } from '@/state/workspaceContext';
 import { useAuth } from '@/state/authContext';
+import { Avatar } from '@/components/ui/Avatar';
+import { initialsFor } from '@/lib/initials';
 import { ROUTES } from '@/config/constants';
 
 const WORKSPACES = [
@@ -114,7 +116,12 @@ export function Sidebar({ mobileOpen, onClose }: { mobileOpen: boolean; onClose:
   const userTriggerRef = useRef<HTMLButtonElement>(null);
   const { profile } = useWorkspace();
   const dispatch = useWorkspaceDispatch();
-  const { signOut } = useAuth();
+  const { signOut, user } = useAuth();
+
+  // Prefer the live Firebase account for name/photo so a Google avatar appears on first paint,
+  // rather than waiting for `useProfileSync` to write it into the store.
+  const chipName = user?.displayName || profile.fullName;
+  const chipInitials = user?.displayName ? initialsFor(user.displayName) : profile.initials;
 
   const signOutUser = useCallback(async () => {
     try {
@@ -177,11 +184,15 @@ export function Sidebar({ mobileOpen, onClose }: { mobileOpen: boolean; onClose:
             onClick={() => setUserMenuOpen((value) => !value)}
             aria-haspopup="menu"
             aria-expanded={userMenuOpen}
-            aria-label={`Account menu for ${profile.fullName}`}
+            aria-label={`Account menu for ${chipName}`}
           >
-            <span className="avatar">{profile.initials}</span>
+            <Avatar
+              name={chipName}
+              initials={chipInitials}
+              src={user?.photoURL ?? profile.photoURL}
+            />
             <span>
-              <b>{profile.fullName}</b>
+              <b>{chipName}</b>
               <small>{profile.jobRole}</small>
             </span>
             <ChevronRight size={16} className="user-chip-chevron" />

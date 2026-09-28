@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { Camera, CheckCircle2, ShieldCheck, X } from 'lucide-react';
 import { Card, CardHeader } from '@/components/ui/Card';
+import { Avatar } from '@/components/ui/Avatar';
 import { Select } from '@/components/ui/Select';
+import { initialsFor } from '@/lib/initials';
 import { JOB_ROLES } from '@/data/mock';
 import { useWorkspace, useWorkspaceDispatch } from '@/state/workspaceContext';
 import { useAuth } from '@/state/authContext';
@@ -12,7 +14,7 @@ const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 export function ProfilePage() {
   const { profile, settings } = useWorkspace();
   const dispatch = useWorkspaceDispatch();
-  const { user, updateProfile, isDemoMode } = useAuth();
+  const { user, updateProfile, isDemoMode, profileVersion } = useAuth();
   const isRemote = Boolean(user) && !isDemoMode;
 
   const [fullName, setFullName] = useState(profile.fullName);
@@ -27,12 +29,15 @@ export function ProfilePage() {
   const fileRef = useRef<HTMLInputElement>(null);
 
   // Re-hydrate from the signed-in account whenever it changes (sign-in, or a profile write).
+  // `profileVersion` is in the deps because updating the account keeps the same `user` object
+  // identity, so depending on `user` alone would leave this stale after a save.
   useEffect(() => {
     if (!user) return;
     if (user.displayName) setFullName(user.displayName);
     if (user.email) setEmail(user.email);
-    if (user.photoURL) setPhoto(user.photoURL);
-  }, [user]);
+    // `?? null` is load-bearing: a removed photo must clear the preview, not keep the old URL.
+    setPhoto(user.photoURL ?? null);
+  }, [user, profileVersion]);
 
   const dirty = fullName !== profile.fullName || jobRole !== profile.jobRole || department !== profile.department;
   const avatarSrc = photo ?? user?.photoURL ?? null;
@@ -51,7 +56,12 @@ export function ProfilePage() {
       if (isRemote && fullName.trim() !== user?.displayName) {
         await updateProfile({ displayName: fullName.trim() });
       }
-      dispatch({ type: 'profile/update', changes: { fullName: fullName.trim(), email: email.trim(), jobRole, department } });
+      // `photoURL` is included so the shell updates in demo mode too, where there is no
+      // Firebase account to read the photo back from.
+      dispatch({
+        type: 'profile/update',
+        changes: { fullName: fullName.trim(), email: email.trim(), jobRole, department, photoURL: avatarSrc },
+      });
       dispatch({
         type: 'toast/push',
         toast: {
@@ -116,13 +126,13 @@ export function ProfilePage() {
   return (
     <div className="page-stack profile-layout">
       <Card className="profile-hero">
-        {avatarSrc ? (
-          <img className="avatar avatar-large avatar-image" src={avatarSrc} alt={`${fullName} profile photo`} />
-        ) : (
-          <div className="avatar avatar-large" aria-hidden="true">
-            {profile.initials}
-          </div>
-        )}
+        <Avatar
+          name={fullName}
+          initials={initialsFor(fullName)}
+          src={avatarSrc}
+          size="large"
+          alt={`${fullName} profile photo`}
+        />
         <div>
           <span className="eyebrow">PERSONAL PROFILE</span>
           <h2>{fullName}</h2>

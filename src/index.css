@@ -6,6 +6,10 @@
 @import './styles/features/projects.css';
 @import './styles/features/wizard-datasets.css';
 @import './styles/features/scenarios-history.css';
+/* Imported before the file below on purpose: the two overlap on a few selectors, and this
+   ordering lets `settings-security-profile.css` keep winning on conflicting properties while
+   still supplying the rules only defined here (e.g. `.avatar-image`). */
+@import './styles/features/settings.css';
 @import './styles/features/settings-security-profile.css';
 @import './styles/features/auth.css';
 @import './styles/responsive.css';

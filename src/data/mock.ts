@@ -80,7 +80,12 @@ export type WorkspaceSettings = {
   plan: string;
 };
 
-export type ProfileDetails = { fullName: string; email: string; jobRole: string; department: string; initials: string };
+/**
+ * `photoURL` is populated from the signed-in Firebase account — a Google sign-in carries the
+ * account avatar, and an uploaded photo replaces it — so every surface can show the same
+ * picture instead of initials only.
+ */
+export type ProfileDetails = { fullName: string; email: string; jobRole: string; department: string; initials: string; photoURL: string | null };
 
 export type SecurityState = { twoFactorEnabled: boolean };
 
@@ -198,6 +203,7 @@ export const profile: ProfileDetails = {
   jobRole: JOB_ROLES[0],
   department: 'Strategic Planning',
   initials: 'JM',
+  photoURL: null,
 };
 
 export const security: SecurityState = { twoFactorEnabled: false };

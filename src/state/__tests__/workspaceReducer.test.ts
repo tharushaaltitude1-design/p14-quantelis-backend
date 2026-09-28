@@ -149,6 +149,31 @@ describe('workspaceReducer', () => {
     expect(after.profile.fullName).toBe('Alex Rivera');
     expect(after.profile.department).toBe('Ops');
   });
+
+  it('mirrors the signed-in identity, including the Google avatar URL', () => {
+    const withPhoto = workspaceReducer(initialWorkspaceState, {
+      type: 'profile/syncIdentity',
+      identity: { fullName: 'Alex Rivera', email: 'alex.rivera@quantelis.lk', initials: 'AR', photoURL: 'https://lh3.google.test/a.png' },
+    });
+    expect(withPhoto.profile.photoURL).toBe('https://lh3.google.test/a.png');
+    expect(withPhoto.profile.fullName).toBe('Alex Rivera');
+  });
+
+  // A removed photo has to overwrite the previous URL. If the hook sent `undefined` (or skipped
+  // the key) the old avatar would stay in the store and never disappear from the shell.
+  it('clears the stored photo when the account no longer has one', () => {
+    const withPhoto = workspaceReducer(initialWorkspaceState, {
+      type: 'profile/syncIdentity',
+      identity: { photoURL: 'https://lh3.google.test/a.png' },
+    });
+    expect(withPhoto.profile.photoURL).toBe('https://lh3.google.test/a.png');
+
+    const afterRemoval = workspaceReducer(withPhoto, {
+      type: 'profile/syncIdentity',
+      identity: { photoURL: null },
+    });
+    expect(afterRemoval.profile.photoURL).toBeNull();
+  });
 });
 
 describe('WorkspaceProvider', () => {
