@@ -1,0 +1,59 @@
+import type { ReactNode } from 'react';
+import { TrendingUp } from 'lucide-react';
+
+/**
+ * Split-screen shell shared by Sign in and Sign up.
+ *
+ * The form column reuses the dashboard's own tokens (`text-input`, `primary-button`,
+ * `field-error`, `field-label`) so the auth screens match the product rather than looking
+ * bolted on, and the marketing panel is decorative only.
+ */
+export function AuthLayout({ title, subtitle, children, footer }: { title: string; subtitle: string; children: ReactNode; footer: ReactNode }) {
+  return (
+    <div className="auth-shell">
+      <aside className="auth-aside" aria-hidden="true">
+        <div className="auth-aside-glow" />
+        <div className="auth-aside-body">
+          <div className="auth-aside-mark">
+            <TrendingUp size={20} />
+          </div>
+          <h2>Forecasting that keeps pace with your planning.</h2>
+          <p>
+            Quantelis turns raw operational data into validated forecasts, scenario comparisons and an
+            auditable run history — so every decision ships with the evidence behind it.
+          </p>
+          <ul className="auth-aside-points">
+            <li>Validated datasets with visible quality scores</li>
+            <li>Side-by-side scenario comparison across projects</li>
+            <li>Full run history you can export and audit</li>
+          </ul>
+        </div>
+      </aside>
+
+      <main className="auth-main">
+        <div className="auth-card">
+          <div className="auth-card-head">
+            <div className="auth-mark" aria-hidden="true">
+              <TrendingUp size={18} />
+            </div>
+            <h1>{title}</h1>
+            <p>{subtitle}</p>
+          </div>
+          {children}
+          <div className="auth-card-foot">{footer}</div>
+        </div>
+        <p className="auth-legal">By continuing you agree to the Quantelis Terms of Service and Privacy Policy.</p>
+      </main>
+    </div>
+  );
+}
+
+/** Small inline banner for form-level auth errors; announced politely to screen readers. */
+export function AuthError({ message }: { message: string }) {
+  if (!message) return null;
+  return (
+    <p className="auth-error" role="alert">
+      {message}
+    </p>
+  );
+}

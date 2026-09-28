@@ -1,0 +1,21 @@
+/* === Project cards === */
+.project-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+.project-card { display: flex; flex-direction: column; gap: 12px; }
+.project-card-top { display: flex; align-items: center; justify-content: space-between; }
+.project-status { display: inline-flex; align-items: center; gap: 5px; font-size: 0.72rem; font-weight: 600; padding: 3px 10px; border-radius: 20px; }
+.project-status i { width: 5px; height: 5px; border-radius: 50%; }
+.status-active { background: var(--accent-soft); color: var(--accent); }
+.status-active i { background: var(--accent); }
+.status-completed { background: rgba(16,185,129,0.12); color: var(--success); }
+.status-completed i { background: var(--success); }
+.status-draft { background: var(--surface-2); color: var(--text-muted); }
+.status-draft i { background: var(--text-muted); }
+.project-card h2 { font-size: 1rem; }
+.project-card > p { font-size: 0.8rem; color: var(--text-muted); }
+.project-meta { display: flex; gap: 20px; padding: 12px 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+.project-meta span { display: flex; flex-direction: column; gap: 2px; }
+.project-meta small { font-size: 0.7rem; }
+.project-meta b { font-size: 0.85rem; }
+.project-footer { display: flex; align-items: center; justify-content: space-between; }
+.project-footer span { font-size: 0.75rem; color: var(--text-muted); display: inline-flex; align-items: center; gap: 5px; }
+

@@ -1,0 +1,241 @@
+/* === Floating layers: menus, popovers, command palette, toasts ===
+   Rendered through a portal onto document.body, so these are never clipped by the
+   overflow containers (`.table-wrap`, cards, scroll areas) that hold their triggers. */
+
+/* --- Shared floating surface ---
+   `.popover-panel` is applied by the Popover primitive itself, so every floating panel is
+   positioned by its computed top/left and cannot be forgotten at a call site. */
+.popover-panel {
+  position: fixed;
+  z-index: var(--z-menu);
+  background: var(--surface-elevated);
+  border: 1px solid var(--border-strong);
+  border-radius: 10px;
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.48);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  animation: menu-in 0.12s ease-out;
+}
+
+/* --- Menu surface (adds the menu-specific sizing on top) --- */
+.menu-panel {
+  min-width: 190px;
+  max-width: min(280px, calc(100vw - 16px));
+  padding: 6px;
+}
+.menu-panel.align-end { transform-origin: top right; }
+.menu-panel.align-start { transform-origin: top left; }
+
+@keyframes menu-in {
+  from { opacity: 0; transform: translateY(-4px) scale(0.98); }
+  to { opacity: 1; transform: none; }
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 7px;
+  font-size: 0.83rem;
+  color: var(--text-dim);
+  text-align: left;
+  transition: background 0.12s, color 0.12s;
+}
+.menu-item:hover, .menu-item.is-active {
+  background: var(--surface-2);
+  color: var(--text);
+}
+.menu-item > svg:first-child { color: var(--text-muted); flex-shrink: 0; }
+.menu-item.is-active > svg:first-child { color: var(--accent); }
+.menu-item-label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.menu-item-hint { font-size: 0.7rem; color: var(--text-muted); }
+.menu-item.danger { color: var(--danger); }
+.menu-item.danger > svg:first-child, .menu-item.danger.is-active { color: var(--danger); }
+.menu-item.danger:hover, .menu-item.danger.is-active { background: rgba(239, 68, 68, 0.12); }
+.menu-item:disabled { opacity: 0.45; cursor: not-allowed; }
+
+.menu-separator { height: 1px; background: var(--border); margin: 5px 4px; }
+.menu-label {
+  display: block;
+  padding: 6px 10px 4px;
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.menu-check { margin-left: auto; color: var(--accent); display: grid; place-items: center; }
+.menu-item-shortcut { margin-left: auto; font-size: 0.68rem; color: var(--text-muted); font-family: 'IBM Plex Mono', monospace; }
+
+/* --- Filter popover body (built on the same surface) --- */
+.filter-body { padding: 4px; }
+.filter-section + .filter-section { border-top: 1px solid var(--border); margin-top: 4px; padding-top: 4px; }
+.filter-footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 10px 4px;
+  border-top: 1px solid var(--border);
+  margin-top: 4px;
+}
+
+/* --- Search input with clear affordance --- */
+.search-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 7px 12px;
+  min-width: 0;
+}
+.search-input-wrap:focus-within { border-color: var(--accent); }
+.search-input-wrap > svg { color: var(--text-muted); flex-shrink: 0; }
+.search-input-wrap input {
+  background: none;
+  border: none;
+  color: var(--text);
+  outline: none;
+  font-size: 0.85rem;
+  width: 100%;
+  min-width: 0;
+}
+.search-input-wrap input::placeholder { color: var(--text-muted); }
+.search-clear {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+.search-clear:hover { background: var(--border-strong); color: var(--text); }
+
+/* --- Global search / command palette --- */
+.command-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-modal);
+  background: rgba(2, 6, 18, 0.66);
+  backdrop-filter: blur(4px);
+  display: flex;
+  justify-content: center;
+  padding: 12vh 16px 16px;
+  animation: fade-in 0.12s ease-out;
+}
+.command-panel {
+  width: 100%;
+  max-width: 560px;
+  max-height: 70vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface-elevated);
+  border: 1px solid var(--border-strong);
+  border-radius: 14px;
+  box-shadow: 0 28px 70px rgba(0, 0, 0, 0.55);
+  overflow: hidden;
+}
+.command-search { display: flex; align-items: center; gap: 10px; padding: 14px 16px; border-bottom: 1px solid var(--border); }
+.command-search > svg { color: var(--text-muted); flex-shrink: 0; }
+.command-search input { background: none; border: none; color: var(--text); outline: none; font-size: 0.95rem; width: 100%; }
+.command-search input::placeholder { color: var(--text-muted); }
+.command-results { overflow-y: auto; padding: 8px; flex: 1; }
+.command-group-label {
+  display: block;
+  padding: 8px 10px 4px;
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.command-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 9px 10px;
+  border-radius: 8px;
+  text-align: left;
+  color: var(--text-dim);
+}
+.command-item.is-active { background: var(--accent-soft); color: var(--text); }
+.command-item.is-active .command-item-kind { color: var(--accent); }
+.command-item-icon { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 7px; background: var(--surface-2); color: var(--text-muted); flex-shrink: 0; }
+.command-item-copy { min-width: 0; flex: 1; }
+.command-item-copy b { display: block; font-size: 0.86rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.command-item-copy small { display: block; font-size: 0.74rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.command-item-kind { font-size: 0.68rem; color: var(--text-muted); flex-shrink: 0; }
+.command-footer {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 9px 16px;
+  border-top: 1px solid var(--border);
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  flex-wrap: wrap;
+}
+.command-footer kbd { font-size: 0.65rem; background: var(--surface-2); border: 1px solid var(--border); padding: 1px 5px; border-radius: 4px; }
+.command-empty { padding: 30px 16px; text-align: center; color: var(--text-muted); font-size: 0.85rem; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+
+/* --- Toaster --- */
+.toaster {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  z-index: var(--z-toast);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: min(360px, calc(100vw - 36px));
+  pointer-events: none;
+}
+.toast {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 11px 13px;
+  background: var(--surface-elevated);
+  border: 1px solid var(--border-strong);
+  border-left: 3px solid var(--accent);
+  border-radius: 10px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
+  pointer-events: auto;
+  animation: toast-in 0.16s ease-out;
+}
+.toast.is-success { border-left-color: var(--success); }
+.toast.is-danger { border-left-color: var(--danger); }
+.toast-icon { display: grid; place-items: center; color: var(--accent); margin-top: 1px; }
+.toast.is-success .toast-icon { color: var(--success); }
+.toast.is-danger .toast-icon { color: var(--danger); }
+.toast-copy { min-width: 0; }
+.toast-copy b { display: block; font-size: 0.84rem; }
+.toast-copy span { display: block; font-size: 0.78rem; color: var(--text-dim); overflow-wrap: anywhere; }
+.toast-dismiss { color: var(--text-muted); display: grid; place-items: center; width: 22px; height: 22px; border-radius: 5px; flex-shrink: 0; }
+.toast-dismiss:hover { background: var(--surface-2); color: var(--text); }
+
+@keyframes toast-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* --- Inline form validation --- */
+.field-error { display: block; font-size: 0.74rem; color: var(--danger); margin-top: 5px; }
+.text-input[aria-invalid='true'] { border-color: var(--danger); }
+.form-note { font-size: 0.78rem; color: var(--text-muted); margin: 8px 24px 0; }
+
+@media (max-width: 640px) {
+  .toaster { right: 12px; left: 12px; bottom: 12px; max-width: none; }
+  .command-backdrop { padding: 8vh 10px 10px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .menu-panel, .toast, .command-backdrop { animation: none; }
+}

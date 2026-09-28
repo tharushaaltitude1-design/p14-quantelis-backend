@@ -1,0 +1,30 @@
+/* === Scenarios === */
+.scenario-list { display: flex; flex-direction: column; }
+.scenario-row { display: flex; align-items: center; gap: 14px; padding: 14px 0; border-top: 1px solid var(--border); }
+.scenario-row:first-child { border-top: none; }
+.scenario-row.selected { background: var(--accent-soft); margin: 0 -20px; padding: 14px 20px; border-radius: 8px; border-color: transparent; }
+.checkbox { width: 18px; height: 18px; border-radius: 5px; border: 1.5px solid var(--border-strong); display: grid; place-items: center; flex-shrink: 0; }
+.checkbox.checked { background: var(--accent); border-color: var(--accent); color: white; font-size: 0.7rem; }
+.scenario-score { font-family: 'IBM Plex Mono'; font-size: 1.1rem; width: 36px; text-align: center; }
+.scenario-name { min-width: 160px; }
+.scenario-name b { display: block; font-size: 0.85rem; }
+.scenario-name small { font-size: 0.72rem; }
+.scenario-params { flex: 1; font-size: 0.8rem; color: var(--text-dim); }
+.objective-tag { display: inline-flex; align-items: center; gap: 5px; font-size: 0.72rem; font-weight: 600; color: var(--cyan); background: var(--cyan-soft); padding: 4px 10px; border-radius: 20px; }
+.optimization-callout { display: flex; align-items: center; gap: 20px; }
+.callout-icon { width: 44px; height: 44px; border-radius: 10px; background: linear-gradient(135deg, var(--accent), var(--cyan)); display: grid; place-items: center; color: white; flex-shrink: 0; }
+.optimization-callout h2 { font-size: 1.05rem; }
+.optimization-callout p { font-size: 0.82rem; color: var(--text-dim); }
+.optimization-callout > button { margin-left: auto; flex-shrink: 0; }
+
+/* === History === */
+.filter-chips { display: flex; gap: 8px; }
+.filter-chips span { display: inline-flex; align-items: center; gap: 5px; background: var(--surface-2); border: 1px solid var(--border); padding: 5px 10px; border-radius: 20px; font-size: 0.78rem; color: var(--text-dim); }
+.history-list { display: flex; flex-direction: column; }
+.history-row { display: flex; align-items: center; gap: 14px; padding: 14px 0; border-top: 1px solid var(--border); }
+.history-row:first-child { border-top: none; }
+.history-row > span:nth-child(2) { flex: 1; min-width: 0; }
+.history-row b { display: block; font-size: 0.85rem; }
+.history-row small { font-size: 0.72rem; color: var(--text-muted); }
+.history-date { font-size: 0.78rem; color: var(--text-muted); }
+

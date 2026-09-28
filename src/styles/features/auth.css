@@ -1,0 +1,151 @@
+/* === Auth screens (sign in / sign up) ===
+   Reuses the dashboard tokens, so the auth surface is the same product, not a separate skin.
+   The split layout is standard for B2B SaaS: credentials on the left, value proposition on the
+   right, collapsing to a single column on narrow viewports (see `responsive.css`). */
+
+.auth-shell {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 1.05fr 1fr;
+  background: var(--bg);
+}
+
+/* --- Marketing panel --- */
+.auth-aside {
+  position: relative;
+  overflow: hidden;
+  padding: 48px;
+  display: flex;
+  align-items: center;
+  background:
+    radial-gradient(900px 500px at 12% 8%, var(--accent-soft), transparent 60%),
+    radial-gradient(700px 460px at 88% 92%, var(--cyan-soft), transparent 62%),
+    var(--sidebar-bg);
+  border-right: 1px solid var(--border);
+}
+.auth-aside-glow {
+  position: absolute;
+  inset: -30% -10% auto -10%;
+  height: 60%;
+  background: radial-gradient(closest-side, rgba(79, 70, 229, 0.18), transparent 70%);
+  pointer-events: none;
+}
+.auth-aside-body { position: relative; max-width: 460px; }
+.auth-aside-mark {
+  width: 42px;
+  height: 42px;
+  border-radius: 11px;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  background: linear-gradient(135deg, var(--accent), var(--cyan));
+  margin-bottom: 26px;
+  box-shadow: 0 10px 30px rgba(79, 70, 229, 0.35);
+}
+.auth-aside h2 {
+  font-size: 1.9rem;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  margin-bottom: 14px;
+}
+.auth-aside p { color: var(--text-dim); font-size: 0.92rem; line-height: 1.65; }
+.auth-aside-points { list-style: none; margin: 28px 0 0; padding: 0; display: grid; gap: 12px; }
+.auth-aside-points li {
+  position: relative;
+  padding-left: 26px;
+  color: var(--text-dim);
+  font-size: 0.88rem;
+}
+.auth-aside-points li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 5px;
+  width: 14px;
+  height: 8px;
+  border-left: 2px solid var(--cyan);
+  border-bottom: 2px solid var(--cyan);
+  transform: rotate(-45deg);
+}
+
+/* --- Form panel --- */
+.auth-main {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  padding: 48px 32px;
+}
+.auth-card { width: 100%; max-width: 400px; }
+.auth-card-head { margin-bottom: 26px; }
+.auth-mark {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  background: linear-gradient(135deg, var(--accent), var(--cyan));
+  margin-bottom: 18px;
+}
+.auth-card-head h1 { font-size: 1.5rem; letter-spacing: -0.02em; margin-bottom: 6px; }
+.auth-card-head p { color: var(--text-muted); font-size: 0.88rem; }
+.auth-card-foot { margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--border); color: var(--text-muted); font-size: 0.85rem; text-align: center; }
+.auth-card-foot a { color: var(--accent); font-weight: 600; }
+.auth-card-foot a:hover { text-decoration: underline; }
+.auth-legal { color: var(--text-muted); font-size: 0.75rem; text-align: center; max-width: 400px; }
+
+.auth-form { display: grid; gap: 16px; }
+.auth-field { display: grid; gap: 6px; }
+.auth-label-row { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.auth-input-wrap { position: relative; display: flex; align-items: center; }
+.auth-input-wrap > svg { position: absolute; left: 12px; color: var(--text-muted); pointer-events: none; }
+.auth-input-wrap .text-input { width: 100%; padding-left: 36px; padding-right: 40px; }
+.auth-reveal {
+  position: absolute;
+  right: 6px;
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border-radius: 7px;
+  color: var(--text-muted);
+}
+.auth-reveal:hover { background: var(--surface-2); color: var(--text); }
+
+.auth-error,
+.auth-success,
+.auth-notice {
+  display: block;
+  padding: 10px 12px;
+  border-radius: 9px;
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+.auth-error { background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.35); color: #FCA5A5; }
+.auth-success { background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.35); color: #6EE7B7; }
+.auth-notice { background: var(--surface); border: 1px solid var(--border-strong); color: var(--text-dim); }
+.auth-notice code { font-family: 'IBM Plex Mono', monospace; font-size: 0.78rem; color: var(--cyan); }
+
+.auth-submit { width: 100%; justify-content: center; padding: 11px 16px; margin-top: 4px; }
+.auth-submit:disabled { opacity: 0.7; cursor: progress; }
+.auth-fineprint { color: var(--text-muted); font-size: 0.78rem; text-align: center; line-height: 1.5; }
+.auth-hint { color: var(--text-muted); font-size: 0.76rem; }
+
+.auth-strength { display: flex; align-items: center; gap: 10px; margin-top: 2px; }
+.auth-strength-bars { display: flex; gap: 4px; flex: 1; }
+.auth-strength-bars span { flex: 1; height: 3px; border-radius: 2px; background: var(--border-strong); }
+.auth-strength-bars span.is-on { background: var(--danger); }
+.auth-strength-bars span.tone-2.is-on { background: var(--warning); }
+.auth-strength-bars span.tone-3.is-on,
+.auth-strength-bars span.tone-4.is-on { background: var(--success); }
+.auth-strength-label { color: var(--text-muted); font-size: 0.74rem; min-width: 62px; text-align: right; }
+
+.spin { animation: spin 0.9s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .spin { animation-duration: 2.4s; }
+  .auth-strength-bars span { transition: none; }
+}

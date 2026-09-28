@@ -1,0 +1,61 @@
+/* === Settings === */
+.settings-layout { gap: 20px; }
+.settings-tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); }
+.settings-tabs button { padding: 10px 16px; font-size: 0.85rem; color: var(--text-muted); border-bottom: 2px solid transparent; }
+.settings-tabs button.active { color: var(--text); border-color: var(--accent); }
+.settings-form { display: flex; flex-direction: column; gap: 4px; max-width: 420px; }
+.settings-form > button { margin-top: 16px; align-self: flex-start; }
+.toggle-list { display: flex; flex-direction: column; }
+.toggle-list .toggle-row { border-bottom: 1px solid var(--border); }
+.toggle-list .toggle-row:last-child { border-bottom: none; }
+.team-list { display: flex; flex-direction: column; gap: 4px; }
+.team-row { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+.team-row:last-of-type { border-bottom: none; }
+.team-row b { display: block; font-size: 0.85rem; }
+.team-row small { font-size: 0.72rem; }
+.role-badge { font-size: 0.72rem; font-weight: 600; padding: 3px 10px; border-radius: 20px; background: var(--accent-soft); color: var(--accent); margin-left: auto; }
+.team-list > button { margin-top: 12px; align-self: flex-start; }
+.billing-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.plan-current { grid-column: 1 / -1; background: var(--surface-2); border: 1px solid var(--border-strong); border-radius: 10px; padding: 20px; }
+.plan-current h3 { font-size: 1.2rem; margin: 4px 0; }
+.plan-current p { font-size: 0.82rem; color: var(--text-dim); margin-bottom: 14px; }
+.usage-line { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+.usage-line span { font-size: 0.78rem; color: var(--text-muted); display: flex; justify-content: space-between; }
+.usage-line i { height: 6px; background: var(--surface); border-radius: 3px; overflow: hidden; }
+.usage-line em { display: block; height: 100%; width: 68%; background: linear-gradient(90deg, var(--accent), var(--cyan)); border-radius: 3px; }
+.plan-card { background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 4px; }
+.plan-card.featured { border-color: var(--accent); }
+.plan-card b { font-size: 0.95rem; }
+.plan-card span { font-size: 0.78rem; color: var(--text-muted); margin-bottom: 8px; }
+.input-with-action { display: flex; gap: 8px; }
+.input-with-action .text-input { margin-top: 0; }
+.integration-row { display: flex; align-items: center; gap: 14px; padding: 16px 0; border-top: 1px solid var(--border); margin-top: 20px; }
+.integration-icon { width: 38px; height: 38px; border-radius: 9px; background: var(--cyan-soft); color: var(--cyan); display: grid; place-items: center; }
+.integration-row b { display: block; font-size: 0.85rem; }
+.integration-row small { font-size: 0.75rem; }
+.integration-row > button { margin-left: auto; }
+
+/* === Security === */
+.security-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.security-toggle { display: flex; align-items: center; gap: 14px; }
+.security-icon { width: 40px; height: 40px; border-radius: 9px; background: var(--accent-soft); color: var(--accent); display: grid; place-items: center; }
+.security-toggle b { display: block; font-size: 0.85rem; }
+.security-toggle small { font-size: 0.75rem; }
+.security-toggle .toggle { margin-left: auto; }
+.sessions-card { grid-column: 1 / -1; }
+.session-row { display: flex; align-items: center; gap: 14px; padding: 14px 0; border-top: 1px solid var(--border); }
+.session-row:first-of-type { border-top: none; }
+.device-icon { width: 36px; height: 36px; border-radius: 8px; background: var(--surface-2); display: grid; place-items: center; color: var(--text-dim); }
+.session-row b { display: block; font-size: 0.85rem; }
+.session-row small { font-size: 0.75rem; }
+.current-device { font-size: 0.72rem; font-weight: 600; color: var(--success); background: rgba(16,185,129,0.12); padding: 3px 10px; border-radius: 20px; margin-left: auto; }
+.session-row .text-button { margin-left: auto; }
+
+/* === Profile === */
+.profile-layout { gap: 20px; }
+.profile-hero { display: flex; align-items: center; gap: 18px; }
+.profile-hero h2 { font-size: 1.3rem; margin: 4px 0 2px; }
+.profile-hero p { font-size: 0.85rem; color: var(--text-muted); }
+.profile-hero > button { margin-left: auto; }
+.profile-form { max-width: 100%; }
+

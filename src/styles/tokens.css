@@ -1,0 +1,35 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+:root {
+  --bg: #0B1220;
+  --sidebar-bg: #0A0F1C;
+  --surface: #121A2B;
+  --surface-2: #161F33;
+  --surface-elevated: #1A2438;
+  --text: #F1F5F9;
+  --text-muted: #64748B;
+  --text-dim: #94A3B8;
+  --accent: #4F46E5;
+  --accent-soft: #4F46E522;
+  --cyan: #06B6D4;
+  --cyan-soft: #06B6D422;
+  --success: #10B981;
+  --warning: #F59E0B;
+  --danger: #EF4444;
+  --border: #1E293B;
+  --border-strong: #2A3A55;
+  --muted: #64748B;
+  --amber: #F59E0B;
+
+  /* === Layering scale (single source of truth) ===
+     base 0 · sticky topbar 30 · mobile nav backdrop 40 · sidebar 50
+     menus & popovers 100 · toasts 300 · modal backdrop 400 */
+  --z-base: 0;
+  --z-topbar: 30;
+  --z-nav-backdrop: 40;
+  --z-sidebar: 50;
+  --z-menu: 100;
+  --z-toast: 300;
+  --z-modal: 400;
+}
+
