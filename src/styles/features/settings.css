@@ -39,3 +39,24 @@
 .avatar-image { object-fit: cover; }
 .profile-hero .button-row { flex-shrink: 0; }
 .profile-hero .field-error, .profile-hero .compare-note { flex-basis: 100%; }
+
+/* Two-column label/value readout used by Settings > Data to show what is stored and what the
+   demo seed would write. Rendered as a plain list so it reads correctly without a table. */
+.data-counts {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.data-counts li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 9px 12px;
+  font-size: 0.82rem;
+}
+.data-counts li + li { border-top: 1px solid var(--border); }
+.data-counts li span { color: var(--text-dim); }

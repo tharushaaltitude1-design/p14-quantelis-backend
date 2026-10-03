@@ -145,3 +145,21 @@
 @media (prefers-reduced-motion: reduce) {
   .skip-link { transition: none; }
 }
+
+/* Banner shown when a Firestore write fails or the database is unreachable. It sits above the page
+   content rather than replacing it, so the dashboard stays readable while offline — the data on
+   screen is simply not being saved, and the banner says so instead of letting it pass silently. */
+.sync-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 18px;
+  padding: 11px 14px;
+  border: 1px solid var(--danger);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--danger) 10%, var(--surface));
+  color: var(--text);
+  font-size: 0.82rem;
+}
+.sync-banner > span { flex: 1; }
+.sync-banner > svg { color: var(--danger); flex-shrink: 0; }

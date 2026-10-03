@@ -2,24 +2,29 @@ import { describe, expect, it } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { RedirectIfAuthenticated, RequireAuth } from '../guards';
+import { WorkspaceProvider } from '@/state/WorkspaceProvider';
 import { AuthTestProvider } from '@/test/authTestUtils';
 import { makeAuthValue } from '@/test/authFixtures';
 
+// `RequireAuth` reads `hydrated` off the workspace store, so the real composition (auth outside,
+// workspace inside) is what these tests render.
 const renderWith = (status: 'loading' | 'authenticated' | 'unauthenticated', initialEntry: string) =>
   render(
     <MemoryRouter initialEntries={[initialEntry]}>
       <AuthTestProvider value={makeAuthValue({ status })}>
-        <Routes>
-          <Route path="/login" element={<h1>Sign in screen</h1>} />
-          <Route
-            path="/*"
-            element={
-              <RequireAuth>
-                <h1>Protected dashboard</h1>
-              </RequireAuth>
-            }
-          />
-        </Routes>
+        <WorkspaceProvider>
+          <Routes>
+            <Route path="/login" element={<h1>Sign in screen</h1>} />
+            <Route
+              path="/*"
+              element={
+                <RequireAuth>
+                  <h1>Protected dashboard</h1>
+                </RequireAuth>
+              }
+            />
+          </Routes>
+        </WorkspaceProvider>
       </AuthTestProvider>
     </MemoryRouter>,
   );

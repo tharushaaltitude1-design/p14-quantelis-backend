@@ -5,8 +5,9 @@ import { NotificationsTab } from './NotificationsTab';
 import { TeamTab } from './TeamTab';
 import { BillingTab } from './BillingTab';
 import { IntegrationsTab } from './IntegrationsTab';
+import { DataTab } from './DataTab';
 
-const TABS = ['General', 'Notifications', 'Team & roles', 'Billing', 'API & integrations'] as const;
+const TABS = ['General', 'Notifications', 'Team & roles', 'Billing', 'API & integrations', 'Data'] as const;
 type Tab = (typeof TABS)[number];
 
 const TAB_META: Record<Tab, string> = {
@@ -15,6 +16,7 @@ const TAB_META: Record<Tab, string> = {
   'Team & roles': 'Manage workspace access',
   Billing: 'Plan, usage, and invoices',
   'API & integrations': 'Keys and connected data sources',
+  Data: 'What is stored, and how to reset it',
 };
 
 export function SettingsPage() {
@@ -46,6 +48,7 @@ export function SettingsPage() {
           {tab === 'Team & roles' && <TeamTab />}
           {tab === 'Billing' && <BillingTab />}
           {tab === 'API & integrations' && <IntegrationsTab />}
+          {tab === 'Data' && <DataTab />}
         </div>
       </Card>
     </div>

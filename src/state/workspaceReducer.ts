@@ -6,6 +6,7 @@ import {
   type ProjectStatus, type Scenario, type SecurityState, type Session, type Status, type TeamMember, type WorkspaceRole,
   type WorkspaceSettings,
 } from '@/data/mock';
+import { mergeHydration, type WorkspaceHydration } from './workspaceSync';
 
 export type ToastKind = 'info' | 'success' | 'danger';
 
@@ -26,6 +27,14 @@ export type WorkspaceState = {
   seq: number;
   /** Monotonic counter for toasts, so ids stay unique after the stack is capped. */
   toastSeq: number;
+  /**
+   * False until the first round of Firestore snapshots has landed (or until the app decides it
+   * has no database and should keep the local seed). The dashboard gates on this so a user can
+   * never edit data that is about to be replaced by a snapshot.
+   */
+  hydrated: boolean;
+  /** Last persistence failure, surfaced in the shell so a silent write loss cannot go unnoticed. */
+  syncError: string | null;
 };
 
 export type NewDataset = Pick<Dataset, 'name' | 'source' | 'rows' | 'variables' | 'status' | 'quality' | 'columns'>;
@@ -59,9 +68,21 @@ export type WorkspaceAction =
   | { type: 'settings/setPlan'; plan: string }
   | { type: 'profile/update'; changes: Partial<ProfileDetails> }
   | { type: 'profile/syncIdentity'; identity: Partial<ProfileDetails> }
-  | { type: 'security/setTwoFactor'; enabled: boolean }
+| { type: 'security/setTwoFactor'; enabled: boolean }
   | { type: 'toast/push'; toast: Omit<Toast, 'id'> }
-  | { type: 'toast/dismiss'; id: string };
+  | { type: 'toast/dismiss'; id: string }
+  /**
+   * Applies one snapshot from Firestore. Carries only the slices that have arrived, because the
+   * collections are separate subscriptions and report independently. Deliberately does not clear
+   * `hydrated` — that is `workspace/ready`'s job, so the dashboard stays behind the skeleton until
+   * the whole first round of snapshots has landed.
+   */
+  | { type: 'workspace/hydrate'; payload: WorkspaceHydration }
+  /** Marks the store usable without touching data — used when there is no database to read from. */
+  | { type: 'workspace/ready' }
+  /** Puts slices back after a rejected write. Never touches toasts, seq or the sync flags. */
+  | { type: 'workspace/restore'; patch: Partial<WorkspaceState> }
+  | { type: 'workspace/syncError'; message: string | null };
 
 export const initialWorkspaceState: WorkspaceState = {
   datasets: seedDatasets,
@@ -77,7 +98,44 @@ export const initialWorkspaceState: WorkspaceState = {
   toasts: [],
   seq: 0,
   toastSeq: 0,
+  hydrated: false,
+  syncError: null,
 };
+
+/**
+ * Baseline for a real account with nothing in Firestore yet.
+ *
+ * A brand-new sign-up must land on an empty dashboard, not on the demo workspace. The fixtures in
+ * `@/data/mock` are therefore *not* the defaults for a live user: every collection is empty and the
+ * single-document state is neutral, with the workspace named after the account so the first screen
+ * is not blank chrome.
+ */
+export function createFreshWorkspace(account: { displayName?: string | null; email?: string | null }): WorkspaceState {
+  const label = account.displayName?.trim() || account.email?.split('@')[0]?.trim() || '';
+  return {
+    ...initialWorkspaceState,
+    datasets: [],
+    projects: [],
+    scenarios: [],
+    activity: [],
+    notifications: [],
+    team: [],
+    sessions: [],
+    settings: {
+      name: label ? `${label}'s workspace` : 'My workspace',
+      timezone: seedSettings.timezone,
+      currency: seedSettings.currency,
+      notifications: { ...seedSettings.notifications },
+      revealApiKey: false,
+      marketFeedConnected: false,
+      plan: seedSettings.plan,
+    },
+    profile: { ...seedProfile, fullName: account.displayName?.trim() || '', email: account.email || '', initials: '', photoURL: null },
+    security: { twoFactorEnabled: false },
+    hydrated: false,
+    syncError: null,
+  };
+}
 
 type ActivityKind = ActivityEntry['type'];
 
@@ -303,7 +361,7 @@ export function workspaceReducer(state: WorkspaceState, action: WorkspaceAction)
         activity: log(state, 'security', 'Authenticator app', action.enabled ? 'Two-factor authentication enabled' : 'Two-factor authentication disabled', 'Completed', '2fa'),
       };
 
-    case 'toast/push':
+case 'toast/push':
       return {
         ...state,
         // The id comes from a counter rather than the stack length, so trimming the stack
@@ -313,6 +371,21 @@ export function workspaceReducer(state: WorkspaceState, action: WorkspaceAction)
       };
     case 'toast/dismiss':
       return { ...state, toasts: state.toasts.filter((t) => t.id !== action.id) };
+
+    // A snapshot is authoritative for the slices it carries. `mergeHydration` layers it over the
+    // current state rather than replacing it, so a document that only stores some of the fields
+    // (which any hand-edited collection will) cannot blank out a working screen.
+    case 'workspace/hydrate':
+      return { ...state, ...mergeHydration(state, action.payload) };
+
+    case 'workspace/ready':
+      return state.hydrated ? state : { ...state, hydrated: true };
+
+    case 'workspace/restore':
+      return { ...state, ...action.patch };
+
+    case 'workspace/syncError':
+      return { ...state, syncError: action.message };
 
     default:
       return state;

@@ -1,0 +1,266 @@
+rules_version = '2';
+
+// ---------------------------------------------------------------------------
+// Quantelis — Cloud Firestore rules
+// ---------------------------------------------------------------------------
+// HOW TO APPLY
+// Paste this file into Firebase console -> Firestore Database -> Rules, then Publish.
+// Or, from this folder: `npx firebase deploy --only firestore:rules` (see firebase.json).
+// Every read and write is denied until you do.
+//
+// WHAT IS STORED
+// Each account owns one private workspace under `users/{uid}`:
+//
+//   users/{uid}                        profile, the identity mirror and the seed marker fields
+//   users/{uid}/settings/current       workspace settings
+//   users/{uid}/security/current       two-factor flag
+//   users/{uid}/datasets/{id}          dataset
+//   users/{uid}/projects/{id}          project
+//   users/{uid}/scenarios/{id}         scenario
+//   users/{uid}/activity/{id}          activity-log entry
+//   users/{uid}/notifications/{id}     notification
+//   users/{uid}/team/{id}              teammate
+//   users/{uid}/meta/seed              marker: this account's seed state is settled
+//
+// One account owns its workspace outright, so access is decided by `isSelf(uid)` and nothing
+// else. There are no roles and no shared workspace, because the app has neither. A leaked API key
+// therefore buys an attacker nothing: without a valid Firebase Auth token every rule below
+// evaluates false.
+//
+// Reads are permitted on any account the caller owns, with no tier check. That is deliberate — it
+// means a brand-new account can read its own (empty) tree *before* the seed has written anything,
+// which is what the first load depends on.
+//
+// Writes are additionally validated field by field:
+//
+//   - `hasOnly` means a document can never grow a field the app does not read.
+//   - enum checks stop a hand-crafted client writing a status the UI has no branch for.
+//   - `settings` refuses `revealApiKey` outright. That flag is a view toggle for the workspace API
+//     key; storing it would uncover the key to whoever next opens the dashboard, on any machine.
+//
+// Every collection document also carries `id` and `ord`. `id` must match the document path, so one
+// document's payload cannot be written under another document's id. `ord` is the display sort key:
+// Firestore returns collections in document-id order, which is meaningless for ids like "d1", so
+// the client stores its own ordering. It is checked as `is number` rather than `is int` because the
+// sort key is allocated by decrementing, and Firestore stores a JavaScript number that happens to
+// be whole as `double`, not `int`.
+//
+// The activity trail is append-only: entries may be added, and trimmed off the oldest end, but an
+// existing entry cannot be rewritten in place.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // -----------------------------------------------------------------------
+    // Helpers
+    // -----------------------------------------------------------------------
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    /** True when the caller is the account that owns this document. */
+    function isSelf(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+
+    /**
+     * Every collection document is self-describing and sorted.
+     *
+     * `itemId` is the `{documentId}` wildcard from the enclosing match, not a value read off the
+     * document — comparing `d.id` to itself would check nothing at all. Requiring the two to agree
+     * is what stops one document's payload being written under another document's id.
+     */
+    function validItem(uid, itemId, d, fields) {
+      return isSelf(uid)
+        && d.keys().hasOnly(fields + ['id', 'ord'])
+        && d.id is string
+        && d.id == itemId
+        && d.ord is number;
+    }
+
+    // -----------------------------------------------------------------------
+    // Per-collection field validation
+    // -----------------------------------------------------------------------
+
+    function validDataset(uid, itemId, d) {
+      return validItem(uid, itemId, d, ['name', 'source', 'rows', 'variables', 'updated', 'status', 'quality', 'columns'])
+        && d.name is string
+        && d.source is string
+        && d.rows is string
+        && d.variables is int
+        && d.updated is string
+        && d.status in ['Validated', 'Needs review', 'Processing']
+        && d.quality is number
+        && d.columns is list;
+    }
+
+    function validProject(uid, itemId, d) {
+      return validItem(uid, itemId, d, ['name', 'dataset', 'variable', 'horizon', 'lastRun', 'status', 'runs', 'confidence'])
+        && d.name is string
+        && d.dataset is string
+        && d.variable is string
+        && d.horizon is string
+        && d.lastRun is string
+        && d.status in ['Active', 'Draft', 'Completed', 'Archived']
+        && d.runs is int
+        && d.confidence is number;
+    }
+
+    function validScenario(uid, itemId, d) {
+      return validItem(uid, itemId, d, ['name', 'project', 'params', 'objective', 'score'])
+        && d.name is string
+        && d.project is string
+        && d.params is string
+        && d.objective is string
+        && d.score is number;
+    }
+
+    function validActivity(uid, itemId, d) {
+      return validItem(uid, itemId, d, ['title', 'detail', 'type', 'time', 'status', 'ref'])
+        && d.title is string
+        && d.detail is string
+        && d.type in ['forecast', 'dataset', 'scenario', 'team', 'security']
+        && d.time is string
+        && d.status in ['Completed', 'Processing', 'Needs review', 'Failed']
+        && d.ref is string;
+    }
+
+    function validNotification(uid, itemId, d) {
+      return validItem(uid, itemId, d, ['title', 'text', 'time', 'to', 'read'])
+        && d.title is string
+        && d.text is string
+        && d.time is string
+        && d.to is string
+        && d.read is bool;
+    }
+
+    function validMember(uid, itemId, d) {
+      return validItem(uid, itemId, d, ['name', 'jobTitle', 'role', 'invited'])
+        && d.name is string
+        && d.jobTitle is string
+        && d.role in ['Admin', 'Analyst', 'Viewer']
+        && d.invited is bool;
+    }
+
+    // -----------------------------------------------------------------------
+    // users/{uid} — the profile, and the root of everything below it
+    // -----------------------------------------------------------------------
+
+    match /users/{uid} {
+
+      allow get: if isSelf(uid);
+      // The account tree is never queried wholesale; each read is a `get` on this document or a
+      // `list` on one of its subcollections.
+      allow list: if false;
+
+      // The six identity fields are the profile mirror and are always present. createdAt,
+      // seededAt and schemaVersion are written once by the seed and are optional, so a client that
+      // writes the profile before the seed has run is not refused for their absence.
+      //
+      // There is no role, rank or tier on this document, so there is nothing to pin: a caller can
+      // rewrite its own profile in any direction, which is the same freedom it has over every other
+      // document it owns.
+      allow create, update: if isSelf(uid)
+        && request.resource.data.keys().hasOnly([
+             'fullName', 'email', 'jobRole', 'department', 'initials', 'photoURL',
+             'createdAt', 'seededAt', 'schemaVersion'
+           ])
+        && request.resource.data.fullName is string
+        && request.resource.data.email is string
+        && request.resource.data.jobRole is string
+        && request.resource.data.department is string
+        && request.resource.data.initials is string
+        // An account with no avatar stores null rather than an empty string. `is` only accepts type
+        // names, so a null check has to be `== null`.
+        && (request.resource.data.photoURL is string || request.resource.data.photoURL == null);
+
+      allow delete: if false;
+
+      // -- Single values ---------------------------------------------------
+
+      // Settings. `revealApiKey` is absent from hasOnly, so a client that tries to store it is
+      // refused rather than silently accepted.
+      match /settings/{settingsId} {
+        allow read: if isSelf(uid);
+        allow create, update: if isSelf(uid)
+          && request.resource.data.keys().hasOnly([
+               'name', 'timezone', 'currency', 'notifications', 'marketFeedConnected', 'plan'
+             ])
+          && request.resource.data.name is string
+          && request.resource.data.timezone is string
+          && request.resource.data.currency is string
+          && request.resource.data.notifications is map
+          && request.resource.data.marketFeedConnected is bool
+          && request.resource.data.plan is string;
+        allow delete: if isSelf(uid);
+      }
+
+      match /security/{securityId} {
+        allow read: if isSelf(uid);
+        allow create, update: if isSelf(uid)
+          && request.resource.data.keys().hasOnly(['twoFactorEnabled'])
+          && request.resource.data.twoFactorEnabled is bool;
+        allow delete: if isSelf(uid);
+      }
+
+      // The seed marker. Nothing in the UI reads it, and it is what stops a cleared workspace
+      // being refilled on the next load.
+      match /meta/{metaId} {
+        allow read: if isSelf(uid);
+        allow create, update: if isSelf(uid)
+          && request.resource.data.keys().hasOnly(['schemaVersion', 'seeded', 'completedAt'])
+          && request.resource.data.schemaVersion is int
+          && request.resource.data.seeded is bool
+          && request.resource.data.completedAt is int;
+        allow delete: if isSelf(uid);
+      }
+
+      // -- Collections -----------------------------------------------------
+
+      match /datasets/{datasetId} {
+        allow read: if isSelf(uid);
+        allow create, update: if isSelf(uid) && validDataset(uid, datasetId, request.resource.data);
+        allow delete: if isSelf(uid);
+      }
+
+      match /projects/{projectId} {
+        allow read: if isSelf(uid);
+        allow create, update: if isSelf(uid) && validProject(uid, projectId, request.resource.data);
+        allow delete: if isSelf(uid);
+      }
+
+      match /scenarios/{scenarioId} {
+        allow read: if isSelf(uid);
+        allow create, update: if isSelf(uid) && validScenario(uid, scenarioId, request.resource.data);
+        allow delete: if isSelf(uid);
+      }
+
+      match /notifications/{notificationId} {
+        allow read: if isSelf(uid);
+        allow create, update: if isSelf(uid) && validNotification(uid, notificationId, request.resource.data);
+        allow delete: if isSelf(uid);
+      }
+
+      match /team/{memberId} {
+        allow read: if isSelf(uid);
+        allow create, update: if isSelf(uid) && validMember(uid, memberId, request.resource.data);
+        allow delete: if isSelf(uid);
+      }
+
+      // Append-only audit trail.
+      match /activity/{entryId} {
+        allow read: if isSelf(uid);
+        allow create: if isSelf(uid) && validActivity(uid, entryId, request.resource.data);
+        allow update: if false;
+        allow delete: if isSelf(uid);
+      }
+    }
+
+    // Nothing outside an account's own tree is readable or writable, including any collection
+    // created later by mistake.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
