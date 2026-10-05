@@ -66,19 +66,19 @@ export function Topbar({ onOpenNav }: { onOpenNav: () => void }) {
         <p>{page.subtitle}</p>
       </div>
       <div className="topbar-actions">
+        {/* One search entry point only. There used to be a second icon button sitting next to the
+            notification bell, which duplicated this on every phone-sized screen — the field below
+            now shrinks instead of disappearing, and ⌘K still opens the palette everywhere. */}
         <button
           type="button"
-          className="search-box search-trigger hide-mobile"
+          className="search-box search-trigger"
           onClick={() => setSearchOpen(true)}
           aria-label="Search workspace"
           aria-haspopup="dialog"
         >
           <Search size={16} aria-hidden="true" />
           <span className="search-trigger-label">Search workspace</span>
-          <kbd>⌘ K</kbd>
-        </button>
-        <button type="button" className="icon-button search-trigger-icon" onClick={() => setSearchOpen(true)} aria-label="Search workspace">
-          <Search size={19} />
+          <kbd aria-hidden="true">⌘ K</kbd>
         </button>
         <NotificationsMenu onNavigate={navigate} />
         {showNewProject && (

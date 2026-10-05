@@ -1,14 +1,21 @@
-/* === Responsive === */
-.sidebar-backdrop { position: fixed; inset: 0; background: rgba(2,6,18,0.6); z-index: var(--z-nav-backdrop); display: none; }
+/* === Responsive ===
+   Three tiers, named after the widths the design is checked at:
+     - 991px and below  tablet and phone. The sidebar becomes a drawer behind a hamburger.
+     - 768px and below  large phone / small tablet.
+     - 640px and below  phone.
 
-/* The marketing panel is hidden below 1025px, so its copy of the wordmark must go too and the
+   The 992px line is where the hamburger starts, deliberately. `1024px` used to be the cut-off,
+   which put the drawer and its hamburger on screen across the whole `lg` band; the sidebar is a
+   permanent rail from 992px up, so nothing at `lg` or `xl` needs a menu button to reveal it. */
+
+/* The marketing panel is hidden below 992px, so its copy of the wordmark must go too and the
    card copy takes over. Doing this as a pair is what guarantees the logo is never shown twice. */
-@media (min-width: 1025px) {
+@media (min-width: 992px) {
   .auth-aside-logo-link { display: block; }
   .auth-card-logo-link { display: none; }
 }
 
-@media (max-width: 1024px) {
+@media (max-width: 991px) {
   .main-content { margin-left: 0; }
   .sidebar { transform: translateX(-100%); transition: transform 0.25s; }
   .sidebar-open { transform: translateX(0); }
@@ -17,20 +24,19 @@
   .top-grid { grid-template-columns: 1fr; }
   .bottom-grid { grid-template-columns: 1fr; }
   .stats-grid { grid-template-columns: repeat(2, 1fr); }
+
+  /* --- Table toolbars: Forecasting projects, Datasets, Scenarios & optimization,
+         Results & history ---
+     The search field takes the full row and the sort / filter controls drop beneath it. Sharing
+     one line at tablet width squeezed the field down to roughly the width of its own icon, which
+     is what made the search bar look broken rather than merely narrow. */
+  .table-toolbar { flex-direction: column; align-items: stretch; }
+  .table-search { flex: 1 1 auto; max-width: none; }
+  .table-toolbar > .compact-select { width: 100%; }
+  .table-toolbar .button-row { width: 100%; flex-wrap: wrap; justify-content: flex-start; }
 }
+
 @media (max-width: 768px) {
-  .search-box { display: none; }
-  /* The full search field collapses on mobile, so the icon trigger takes over. */
-  .search-trigger-icon { display: grid; }
-  .hide-mobile { display: none; }
-  .stats-grid { grid-template-columns: 1fr; }
-  .billing-grid { grid-template-columns: 1fr; }
-  .security-grid { grid-template-columns: 1fr; }
-  .project-grid { grid-template-columns: 1fr; }
-  /* Auth split-screen collapses to a single, centred column on phones. */
-  .auth-shell { grid-template-columns: 1fr; }
-  .auth-aside { display: none; }
-  .auth-main { padding: 32px 20px; }
   .compare-bar { gap: 12px; }
   .compare-bar > .button-row { width: 100%; justify-content: flex-end; }
   .compare-row { grid-template-columns: 1fr; gap: 4px; }
@@ -41,6 +47,64 @@
   .topbar { padding: 14px 16px; }
   .topbar-heading h1 { font-size: 1.15rem; }
   .donut-layout { flex-direction: column; }
-  .table-toolbar { flex-direction: column; align-items: stretch; }
   .pagination { flex-direction: column; align-items: flex-start; gap: 10px; }
+
+  /* The sort select shares the row with the filter/menu buttons, so it takes the slack. */
+  .table-toolbar > .compact-select { flex: 1 1 160px; }
+
+  /* --- Scenarios & optimization ---
+     `.scenario-row` is a single flex line of six children on desktop. Rather than let the
+     objective pill and the row menu slide off the right edge, the row wraps: checkbox, score,
+     name and the menu stay on the first line, the pill and parameters share the second. */
+  .scenario-row { flex-wrap: wrap; row-gap: 8px; }
+  .scenario-row > .scenario-name { flex: 1 1 auto; min-width: 0; }
+  .scenario-row > .scenario-name b { overflow-wrap: anywhere; }
+  .scenario-row > .icon-button { order: 2; margin-left: auto; }
+  .scenario-row > .objective-tag { order: 3; margin-left: 0; }
+  .scenario-row > .scenario-params { order: 4; flex: 1 1 auto; min-width: 0; font-size: 0.76rem; text-align: right; }
+
+  /* --- Results & history ---
+     Same treatment: the record's title takes its own line, the date and status sit under it, and
+     the Details trigger moves to a full-width row of its own so it is an easy thumb target. */
+  .history-row { flex-wrap: wrap; gap: 8px 12px; }
+  .history-row > span:nth-child(2) { flex: 1 1 100%; order: 1; }
+  .history-row > .history-date { order: 2; }
+  .history-row > .status-pill { order: 3; margin-left: auto; }
+  .history-row > .link-button { order: 4; flex: 1 1 100%; justify-content: flex-start; }
+
+  /* --- Settings ---
+     The tab strip becomes a single scrollable row rather than six wrapped buttons, and the form
+     stops being a fixed 420px column so it uses the width a phone actually has. */
+  .settings-tabs { overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+  .settings-tabs::-webkit-scrollbar { display: none; }
+  .settings-tabs button { flex: 0 0 auto; white-space: nowrap; padding: 10px 14px; }
+  .settings-form { max-width: 100%; }
+  .settings-form > button { align-self: stretch; justify-content: center; }
+  .toggle-row, .team-row, .invoice-row, .integration-row, .session-row { flex-wrap: wrap; gap: 10px; }
+  .toggle-row small, .team-row small, .invoice-row small, .integration-row small, .session-row small { flex: 1 1 100%; }
+  .role-badge, .current-device { margin-left: 0; }
+  .input-with-action { flex-wrap: wrap; }
+  .usage-line span { flex-wrap: wrap; gap: 4px; }
+}
+
+@media (max-width: 640px) {
+  /* --- Header (item 10) ---
+     The header stacks three lines on desktop — eyebrow, page title, subtitle — which left roughly
+     a fifth of a phone screen occupied before any content. On a phone the title alone identifies
+     the page (the sidebar and the toolbar beneath repeat the rest), so the decorative line goes
+     and the paddings tighten around what is left. */
+  .topbar { padding: 10px 12px; gap: 10px; }
+  .topbar .eyebrow,
+  .topbar-heading p { display: none; }
+  .topbar-heading h1 { font-size: 1.05rem; margin-bottom: 0; }
+  .topbar-actions { gap: 6px; }
+  /* The one remaining search trigger has to fit alongside the bell and the account menu, so it
+     gives up its width rather than disappearing, and the label is the first thing to go. */
+  .search-box { width: auto; flex: 1 1 auto; min-width: 0; max-width: 220px; padding: 7px 10px; }
+  .search-trigger-label, .search-trigger kbd { display: none; }
+  .profile-mini > svg { display: none; }
+
+  .card { padding: 16px; }
+  /* The selected-row bleed has to match the card padding it is escaping from. */
+  .scenario-row.selected { margin: 0 -16px; padding: 14px 16px; }
 }

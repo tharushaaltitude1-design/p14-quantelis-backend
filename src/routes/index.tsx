@@ -16,6 +16,8 @@ const SecurityPage = lazy(() => import('@/features/security/SecurityPage').then(
 const ProfilePage = lazy(() => import('@/features/profile/ProfilePage').then((m) => ({ default: m.ProfilePage })));
 const SignInPage = lazy(() => import('@/features/auth/SignInPage').then((m) => ({ default: m.SignInPage })));
 const SignUpPage = lazy(() => import('@/features/auth/SignUpPage').then((m) => ({ default: m.SignUpPage })));
+const ForgotPasswordPage = lazy(() => import('@/features/auth/ForgotPasswordPage').then((m) => ({ default: m.ForgotPasswordPage })));
+const ResetPasswordPage = lazy(() => import('@/features/auth/ResetPasswordPage').then((m) => ({ default: m.ResetPasswordPage })));
 
 export function AppRoutes() {
   return (
@@ -38,6 +40,12 @@ export function AppRoutes() {
               </RedirectIfAuthenticated>
             }
           />
+          {/* The two halves of the password reset. Neither is wrapped in `RedirectIfAuthenticated`:
+              `/reset-password` is opened from an email link, so the visitor may well already have a
+              live session, and bouncing them to the dashboard would strand them mid-reset. Both
+              screens are self-contained, so there is nothing behind them to protect. */}
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route
             path="/*"
             element={

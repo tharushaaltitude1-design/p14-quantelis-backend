@@ -72,11 +72,13 @@ describe('logo styling', () => {
 
   // Guards the agreed sizes. The wordmark is a 3:1 lockup, so the height is what actually sets
   // how large it reads; a regression here is invisible in the source but obvious on screen.
+  // These were raised together (item 1 of the QA pass): at 39–43px the wordmark read as a header
+  // ornament rather than as the product's name on the login, signup and sidebar screens.
   it.each([
-    ['the base size', '.brand-logo', '41px'],
-    ['the sidebar', '.sidebar-logo', '39px'],
-    ['the sign-in and sign-up screens', '.auth-aside-logo', '43px'],
-    ['the auth card on mobile', '.auth-card-logo', '43px'],
+    ['the base size', '.brand-logo', '48px'],
+    ['the sidebar', '.sidebar-logo', '48px'],
+    ['the sign-in and sign-up screens', '.auth-aside-logo', '56px'],
+    ['the auth card on mobile', '.auth-card-logo', '56px'],
   ])('renders %s at the agreed size', (_label, selector, expected) => {
     expect(css()).toMatch(new RegExp(`\\${selector}\\s*\\{[^}]*height:\\s*${expected}`));
   });

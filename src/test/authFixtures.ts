@@ -14,6 +14,10 @@ export function makeAuthValue(overrides: Partial<AuthContextValue> = {}): AuthCo
     signUp: vi.fn().mockResolvedValue({ verificationEmailSent: true }),
     signOut: vi.fn().mockResolvedValue(undefined),
     sendResetEmail: vi.fn().mockResolvedValue(undefined),
+    verifyResetCode: vi.fn().mockResolvedValue('alex.rivera@quantelis.lk'),
+    confirmPasswordReset: vi.fn().mockResolvedValue(undefined),
+    redirectError: null,
+    clearRedirectError: vi.fn(),
     updateProfile: vi.fn().mockResolvedValue(undefined),
     ...overrides,
   };

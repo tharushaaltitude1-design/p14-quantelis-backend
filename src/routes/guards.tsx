@@ -3,6 +3,8 @@ import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/state/authContext';
 import { useWorkspace } from '@/state/workspaceContext';
 import { PageSkeleton } from '@/components/ui/PageSkeleton';
+import { takeReturnTo } from '@/lib/authReturn';
+import { GUEST_ROUTES, ROUTES } from '@/config/constants';
 
 /**
  * Route guard for the authenticated dashboard.
@@ -21,16 +23,27 @@ export function RequireAuth({ children }: { children: ReactNode }) {
   const { hydrated } = useWorkspace();
 
   if (status === 'loading') return <PageSkeleton />;
-  if (status === 'unauthenticated') return <Navigate to="/login" replace state={{ from: location.pathname + location.search }} />;
+  if (status === 'unauthenticated') return <Navigate to={ROUTES.login} replace state={{ from: location.pathname + location.search }} />;
   if (!hydrated) return <PageSkeleton />;
   return <>{children}</>;
 }
 
-/** Keeps a signed-in user away from the sign-in / sign-up screens. */
+/**
+ * Keeps a signed-in user away from the sign-in / sign-up screens and lands them on the dashboard.
+ *
+ * The destination is normally the Overview, which is the product's default landing page. The one
+ * exception is a deep link captured by {@link RequireAuth}: that target was stashed in
+ * `sessionStorage` before a Google redirect tore the page down, and it is consumed on read so a
+ * later sign-in cannot reuse it. Guarding a guest route is needed as well — a signed-in visitor
+ * who bookmarked `/login` should not be bounced to a sign-in form and back around in a loop.
+ */
 export function RedirectIfAuthenticated({ children }: { children: ReactNode }) {
   const { status } = useAuth();
 
   if (status === 'loading') return <PageSkeleton />;
-  if (status === 'authenticated') return <Navigate to="/" replace />;
+  if (status === 'authenticated') {
+    const target = takeReturnTo(ROUTES.overview);
+    return <Navigate to={GUEST_ROUTES.includes(target) ? ROUTES.overview : target} replace />;
+  }
   return <>{children}</>;
 }

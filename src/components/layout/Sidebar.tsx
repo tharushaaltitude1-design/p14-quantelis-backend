@@ -138,7 +138,9 @@ export function Sidebar({ mobileOpen, onClose }: { mobileOpen: boolean; onClose:
   }, [signOut, dispatch, navigate]);
 
   useEscapeKey(mobileOpen, onClose);
-  useScrollLock(mobileOpen && window.matchMedia('(max-width: 1024px)').matches);
+  // Matches the breakpoint in responsive.css: the sidebar is a fixed rail above it and a drawer
+  // below it, so only the drawer needs the page behind it frozen.
+  useScrollLock(mobileOpen && window.matchMedia('(max-width: 991px)').matches);
   useEffect(() => {
     document.body.dataset.navOpen = String(mobileOpen);
     return () => {

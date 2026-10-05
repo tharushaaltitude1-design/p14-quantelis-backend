@@ -2,7 +2,8 @@ import { useState, type FormEvent } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { ArrowRight, Eye, EyeOff, Loader2, Lock, Mail } from 'lucide-react';
 import { useAuth } from '@/state/authContext';
-import { ROUTES } from '@/config/constants';
+import { GUEST_ROUTES, ROUTES } from '@/config/constants';
+import { rememberReturnTo } from '@/lib/authReturn';
 import { safeReturnTo } from '@/lib/redirect';
 import { AuthError, AuthLayout } from './AuthLayout';
 import { AuthDivider, GoogleButton } from './GoogleButton';
@@ -11,25 +12,36 @@ import { hasErrors, validateSignIn, type FieldErrors } from './validation';
 type LocationState = { from?: string };
 
 export function SignInPage() {
-  const { signIn, signInWithGoogle, sendResetEmail, isDemoMode } = useAuth();
+  const { signIn, signInWithGoogle, redirectError, clearRedirectError, isDemoMode } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   // `from` is untrusted: the guard writes it, but a crafted `state` or a future callback route
-  // could put anything here, and `navigate()` honours absolute URLs. Sanitise before use.
-  const redirectTo = safeReturnTo((location.state as LocationState | null)?.from, ROUTES.overview);
+  // could put anything here, and `navigate()` honours absolute URLs. Sanitise before use, and
+  // never treat a guest screen as a destination — signing in from a deep-linked /login would
+  // otherwise send the user straight back to this form.
+  const requestedTarget = safeReturnTo((location.state as LocationState | null)?.from, ROUTES.overview);
+  const redirectTo = GUEST_ROUTES.includes(requestedTarget) ? ROUTES.overview : requestedTarget;
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState<FieldErrors>({});
   const [formError, setFormError] = useState('');
-  const [notice, setNotice] = useState('');
   const [pending, setPending] = useState(false);
   const [googlePending, setGooglePending] = useState(false);
 
+  // A Google sign-in that came back through a redirect reloads the app, so this is the first
+  // render that exists after the failure and the only place its message can be shown. Captured
+  // once: clearing it on submit must not make the message reappear if the provider value changes.
+  const [failedRedirect] = useState(redirectError ?? '');
+
   const onGoogle = async () => {
     setFormError('');
+    clearRedirectError();
     setGooglePending(true);
+    // Written before the call: if the popup is refused and this falls back to a full-page
+    // redirect, the in-memory router state is gone by the time the user arrives back.
+    rememberReturnTo(redirectTo);
     try {
       await signInWithGoogle();
       navigate(redirectTo, { replace: true });
@@ -42,7 +54,7 @@ export function SignInPage() {
   const onSubmit = async (event: FormEvent) => {
     event.preventDefault();
     setFormError('');
-    setNotice('');
+    clearRedirectError();
 
     const nextErrors = validateSignIn({ email, password });
     setErrors(nextErrors);
@@ -54,25 +66,6 @@ export function SignInPage() {
       navigate(redirectTo, { replace: true });
     } catch (error) {
       setFormError(error instanceof Error ? error.message : 'We could not sign you in. Please try again.');
-      setPending(false);
-    }
-  };
-
-  const onForgotPassword = async () => {
-    setFormError('');
-    setNotice('');
-    const emailError = validateSignIn({ email, password: 'placeholder' }).email;
-    if (emailError) {
-      setErrors((current) => ({ ...current, email: emailError }));
-      return;
-    }
-    setPending(true);
-    try {
-      await sendResetEmail(email);
-      setNotice('If that address has an account, a password reset link is on its way.');
-    } catch (error) {
-      setFormError(error instanceof Error ? error.message : 'We could not send that reset email.');
-    } finally {
       setPending(false);
     }
   };
@@ -93,12 +86,7 @@ export function SignInPage() {
             Firebase is not configured, so sign-in is bypassed. Add the <code>VITE_FIREBASE_*</code> values to enable it.
           </p>
         )}
-        <AuthError message={formError} />
-        {notice && (
-          <p className="auth-success" role="status">
-            {notice}
-          </p>
-        )}
+        <AuthError message={formError || failedRedirect} />
 
         <GoogleButton label="Sign in with Google" pending={googlePending} onClick={() => void onGoogle()} />
         <AuthDivider />
@@ -133,9 +121,11 @@ export function SignInPage() {
             <label className="field-label" htmlFor="signin-password">
               Password
             </label>
-            <button type="button" className="text-button" onClick={onForgotPassword} disabled={pending}>
+            {/* A real link, not a button that fires the request in place: the reset needs its own
+                screen, and a hand-off lets a typo'd address be corrected instead of sent. */}
+            <Link className="text-button" to={ROUTES.forgotPassword} state={{ email }}>
               Forgot password?
-            </button>
+            </Link>
           </div>
           <div className="auth-input-wrap">
             <Lock size={16} aria-hidden="true" />

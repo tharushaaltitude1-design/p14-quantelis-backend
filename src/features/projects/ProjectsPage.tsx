@@ -1,5 +1,6 @@
-import { useMemo, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useLocation, useSearchParams } from 'react-router-dom';
+
 import { Copy, Download, Plus, Search } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -33,6 +34,7 @@ export function ProjectsPage() {
   const { projects } = useWorkspace();
   const dispatch = useWorkspaceDispatch();
   const [searchParams, setSearchParams] = useSearchParams();
+  const location = useLocation();
 
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState<ProjectStatus | 'all'>('all');
@@ -43,6 +45,20 @@ export function ProjectsPage() {
   const [deleting, setDeleting] = useState<Project | null>(null);
   const presetDataset = searchParams.get('dataset');
 
+  // The header's "New project" button navigates to `/projects?new=true`. Arriving here from any
+  // other page mounts this component, so the initial state above already opens the wizard. But
+  // pressing it *while already on this page* is the same route with different query params, so
+  // React reuses the mounted component and that initial state never re-runs — the click looked
+  // like it did nothing. `location.key` changes on every navigation even when the path does not,
+  // so comparing against the key last seen turns any fresh navigation carrying the flag into an
+  // open, without also re-opening on first paint or after the flag is cleared.
+  const handledKey = useRef(location.key);
+  useEffect(() => {
+    if (handledKey.current === location.key) return;
+    handledKey.current = location.key;
+    if (searchParams.get('new') === 'true') setWizard(true);
+  }, [location.key, searchParams]);
+
   const closeWizard = () => {
     setWizard(false);
     if (searchParams.has('new') || searchParams.has('dataset')) {
@@ -51,6 +67,7 @@ export function ProjectsPage() {
       setSearchParams(searchParams, { replace: true });
     }
   };
+
 
   const datasetNames = useMemo(() => [...new Set(projects.map((project) => project.dataset))].sort(), [projects]);
   const activeProjectCount = projects.filter((project) => project.status === 'Active').length;

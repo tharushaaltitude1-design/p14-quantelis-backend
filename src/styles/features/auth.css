@@ -33,10 +33,14 @@
 }
 .auth-aside-body { position: relative; max-width: 460px; }
 /* The wordmark is the full 3:1 lockup, so it is sized by height and given the same bottom gap the
-   old square mark used to provide. Hidden by default: the marketing panel only exists at 1025px
-   and up, and responsive.css turns it back on there. */
+   old square mark used to provide. Hidden by default: the marketing panel only exists at 992px
+   and up, and responsive.css turns it back on there.
+
+   56px is the size the sign-in and sign-up screens ask for. It is the largest of the three
+   placements because it is the one on screen alone — the marketing panel carries no other
+   branding — and it is sized to match the `h1` beneath it rather than to look like a header. */
 .auth-aside-logo-link { display: none; width: fit-content; margin-bottom: 26px; border-radius: 8px; }
-.auth-aside-logo { display: block; height: 43px; width: auto; }
+.auth-aside-logo { display: block; height: 56px; width: auto; }
 .auth-aside h2 {
   font-size: 1.9rem;
   line-height: 1.2;
@@ -78,7 +82,7 @@
    exactly once. The anchor carries the margin, since the image is now nested inside it. */
 .auth-card-logo-link { display: block; width: fit-content; margin-bottom: 22px; border-radius: 8px; }
 .auth-card-logo-link:focus-visible { outline: 2px solid var(--cyan); outline-offset: 4px; }
-.auth-card-logo { display: block; height: 43px; width: auto; }
+.auth-card-logo { display: block; height: 56px; width: auto; }
 .auth-card-head h1 { font-size: 1.5rem; letter-spacing: -0.02em; margin-bottom: 6px; }
 .auth-card-head p { color: var(--text-muted); font-size: 0.88rem; }
 .auth-card-foot { margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--border); color: var(--text-muted); font-size: 0.85rem; text-align: center; }
@@ -148,6 +152,12 @@
 .auth-submit:disabled { opacity: 0.7; cursor: progress; }
 .auth-fineprint { color: var(--text-muted); font-size: 0.78rem; text-align: center; line-height: 1.5; }
 .auth-hint { color: var(--text-muted); font-size: 0.76rem; }
+/* Stand-alone link out of a form, used by the forgot-password and reset-password screens. Given
+   `text-button` metrics so it lines up with the label row it replaces on the sign-in screen. */
+.auth-back-link { display: inline-flex; align-items: center; justify-content: center; gap: 6px; font-size: 0.82rem; font-weight: 600; color: var(--text-muted); }
+.auth-back-link:hover { color: var(--text); }
+/* Inline status line that carries an icon, e.g. the "verifying your link" state. */
+.auth-notice > svg, .auth-success > svg { vertical-align: -2px; margin-right: 6px; }
 
 .auth-strength { display: flex; align-items: center; gap: 10px; margin-top: 2px; }
 .auth-strength-bars { display: flex; gap: 4px; flex: 1; }

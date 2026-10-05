@@ -19,7 +19,18 @@ export const ROUTES = {
   profile: '/profile',
   login: '/login',
   signup: '/signup',
+  /** Step 1 of the reset flow: ask for the address and email a link. */
+  forgotPassword: '/forgot-password',
+  /** Step 2: the emailed link lands here with an `oobCode` that sets the new password. */
+  resetPassword: '/reset-password',
 } as const;
+
+/**
+ * Guest-only screens. A signed-in visitor bouncing off any of these should land on the
+ * dashboard rather than being sent back to a sign-in form, and a deep link that captured one of
+ * them as its return target must not become the destination after sign-in.
+ */
+export const GUEST_ROUTES: readonly string[] = [ROUTES.login, ROUTES.signup, ROUTES.forgotPassword, ROUTES.resetPassword];
 
 export const ROLES = ['Admin', 'Analyst', 'Viewer'] as const;
 export const PAGE_SIZE = 8;

@@ -3,12 +3,13 @@ import { Link, useNavigate } from 'react-router-dom';
 import { ArrowRight, Eye, EyeOff, Loader2, Lock, Mail, User as UserIcon } from 'lucide-react';
 import { useAuth } from '@/state/authContext';
 import { ROUTES } from '@/config/constants';
+import { rememberReturnTo } from '@/lib/authReturn';
 import { AuthError, AuthLayout } from './AuthLayout';
 import { AuthDivider, GoogleButton } from './GoogleButton';
 import { hasErrors, passwordStrength, validateSignUp, type FieldErrors } from './validation';
 
 export function SignUpPage() {
-  const { signUp, signInWithGoogle, isDemoMode } = useAuth();
+  const { signUp, signInWithGoogle, redirectError, clearRedirectError, isDemoMode } = useAuth();
   const navigate = useNavigate();
 
   const [fullName, setFullName] = useState('');
@@ -22,10 +23,14 @@ export function SignUpPage() {
   const [googlePending, setGooglePending] = useState(false);
 
   const strength = passwordStrength(password);
+  const [failedRedirect] = useState(redirectError ?? '');
 
   const onGoogle = async () => {
     setFormError('');
+    clearRedirectError();
     setGooglePending(true);
+    // Survives the full-page fallback inside `signInWithGoogle`, which throws away router state.
+    rememberReturnTo(ROUTES.overview);
     try {
       await signInWithGoogle();
       // A Google account arrives already verified, so it can go straight to the workspace.
@@ -39,6 +44,7 @@ export function SignUpPage() {
   const onSubmit = async (event: FormEvent) => {
     event.preventDefault();
     setFormError('');
+    clearRedirectError();
 
     const nextErrors = validateSignUp({ fullName, email, password, confirmPassword });
     setErrors(nextErrors);
@@ -46,14 +52,11 @@ export function SignUpPage() {
 
     setPending(true);
     try {
-      const { verificationEmailSent } = await signUp({ fullName, email, password });
-      // `onAuthStateChanged` has usually already signed the user in, so the guard on `/` will
-      // let them straight through. Verification is a follow-up, not a blocker.
-      if (verificationEmailSent) {
-        navigate(ROUTES.profile, { replace: true, state: { verifyEmail: true } });
-      } else {
-        navigate(ROUTES.overview, { replace: true });
-      }
+      await signUp({ fullName, email, password });
+      // The dashboard overview is the landing page for a new account. Email verification is a
+      // follow-up the user can start from Settings, not a reason to open on a form instead of
+      // the product they just signed up for.
+      navigate(ROUTES.overview, { replace: true });
     } catch (error) {
       setFormError(error instanceof Error ? error.message : 'We could not create your account. Please try again.');
       setPending(false);
@@ -76,7 +79,7 @@ export function SignUpPage() {
             Firebase is not configured, so sign-up is bypassed. Add the <code>VITE_FIREBASE_*</code> values to enable it.
           </p>
         )}
-        <AuthError message={formError} />
+        <AuthError message={formError || failedRedirect} />
 
         <GoogleButton label="Sign up with Google" pending={googlePending} onClick={() => void onGoogle()} />
         <AuthDivider children="or sign up with email" />
@@ -92,7 +95,7 @@ export function SignUpPage() {
               className="text-input"
               type="text"
               autoComplete="name"
-              placeholder="Alex Rivera"
+              placeholder="Enter your name"
               value={fullName}
               onChange={(event) => setFullName(event.target.value)}
               aria-invalid={Boolean(errors.fullName)}

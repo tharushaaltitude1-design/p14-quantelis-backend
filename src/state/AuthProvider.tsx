@@ -3,12 +3,15 @@ import { onAuthStateChanged } from 'firebase/auth';
 import { firebaseAuth, isFirebaseConfigured, loadAnalytics } from '@/lib/firebase';
 import {
   authErrorMessage,
+  completeGoogleRedirect,
+  confirmPasswordResetCode as confirmReset,
   sendResetEmail as sendReset,
   signInWithEmail,
   signInWithGoogle as signInWithGoogleUser,
   signOutUser,
   signUpWithEmail,
   updateUserProfile,
+  verifyResetCode as verifyReset,
 } from '@/lib/authApi';
 import { AuthContext, type AuthContextValue, type AuthStatus } from './authContext';
 
@@ -24,6 +27,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthContextValue['user']>(null);
   const [status, setStatus] = useState<AuthStatus>(isFirebaseConfigured ? 'loading' : 'unauthenticated');
   const [profileVersion, setProfileVersion] = useState(0);
+  const [redirectError, setRedirectError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!firebaseAuth) {
@@ -35,6 +39,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(nextUser);
       setStatus(nextUser ? 'authenticated' : 'unauthenticated');
     });
+  }, []);
+
+  // Runs on every cold start, and is a no-op unless the URL still carries the token Google
+  // appended to the redirect return. When it does, this exchange has to happen before the
+  // guards read `status`, so `status` is deliberately left at `loading` until it settles —
+  // otherwise the guard would bounce the user to /login for the frame in between.
+  useEffect(() => {
+    if (!firebaseAuth) return;
+    let active = true;
+    void completeGoogleRedirect().then(
+      () => {
+        if (active) setStatus((current) => (current === 'loading' ? 'unauthenticated' : current));
+      },
+      (error: unknown) => {
+        if (!active) return;
+        setRedirectError(authErrorMessage(error, 'Google sign-in did not complete. Please try again.'));
+        setStatus('unauthenticated');
+      },
+    );
+    return () => {
+      active = false;
+    };
   }, []);
 
   const signIn = useCallback(async (email: string, password: string) => {
@@ -78,6 +104,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const verifyResetCode = useCallback(async (oobCode: string) => {
+    try {
+      return await verifyReset(oobCode);
+    } catch (error) {
+      throw new Error(authErrorMessage(error, 'That reset link is no longer valid.'));
+    }
+  }, []);
+
+  const confirmPasswordReset = useCallback(async (oobCode: string, newPassword: string) => {
+    try {
+      await confirmReset(oobCode, newPassword);
+    } catch (error) {
+      throw new Error(authErrorMessage(error, 'We could not set that new password.'));
+    }
+  }, []);
+
+  const clearRedirectError = useCallback(() => setRedirectError(null), []);
+
   const updateProfile = useCallback(async (changes: { displayName?: string; photoURL?: string }) => {
     try {
       await updateUserProfile(changes);
@@ -100,9 +144,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       signUp,
       signOut,
       sendResetEmail,
+      verifyResetCode,
+      confirmPasswordReset,
+      redirectError,
+      clearRedirectError,
       updateProfile,
     }),
-    [user, status, profileVersion, signIn, signInWithGoogle, signUp, signOut, sendResetEmail, updateProfile],
+    [
+      user,
+      status,
+      profileVersion,
+      signIn,
+      signInWithGoogle,
+      signUp,
+      signOut,
+      sendResetEmail,
+      verifyResetCode,
+      confirmPasswordReset,
+      redirectError,
+      clearRedirectError,
+      updateProfile,
+    ],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -15,6 +15,7 @@ function renderPage(auth = makeAuthValue(), initialEntry = '/login') {
           <Route path="/login" element={<SignInPage />} />
           <Route path="/" element={<h1>Overview</h1>} />
           <Route path="/datasets" element={<h1>Datasets</h1>} />
+          <Route path="/forgot-password" element={<h1>Forgot password</h1>} />
         </Routes>
       </AuthTestProvider>
     </MemoryRouter>,
@@ -75,21 +76,23 @@ describe('SignInPage', () => {
     expect(alert).not.toHaveTextContent(/auth\//i);
   });
 
-  it('requires a valid email before sending a reset email', async () => {
-    const { user, auth } = renderPage();
-    await user.click(screen.getByRole('button', { name: /forgot password/i }));
-
-    expect(auth.sendResetEmail).not.toHaveBeenCalled();
-    expect(await screen.findByText('Enter your email address.')).toBeInTheDocument();
-  });
-
-  it('sends a reset email for a valid address without revealing whether it exists', async () => {
+  it('hands the typed address to the forgot-password screen instead of firing the request in place', async () => {
     const { user, auth } = renderPage();
     await user.type(screen.getByLabelText(/work email/i), 'alex.rivera@quantelis.lk');
-    await user.click(screen.getByRole('button', { name: /forgot password/i }));
+    await user.click(screen.getByRole('link', { name: /forgot password/i }));
 
-    await waitFor(() => expect(auth.sendResetEmail).toHaveBeenCalledWith('alex.rivera@quantelis.lk'));
-    expect(await screen.findByRole('status')).toHaveTextContent(/if that address has an account/i);
+    expect(auth.sendResetEmail).not.toHaveBeenCalled();
+    expect(await screen.findByRole('heading', { name: /forgot password/i })).toBeInTheDocument();
+  });
+
+  it('offers the forgot-password link whether or not the form is filled in', () => {
+    renderPage();
+    expect(screen.getByRole('link', { name: /forgot password/i })).toHaveAttribute('href', '/forgot-password');
+  });
+
+  it('shows why a Google sign-in that came back through a redirect failed', () => {
+    renderPage(makeAuthValue({ redirectError: 'That Google account uses a different sign-in method. Try your password instead.' }));
+    expect(screen.getByRole('alert')).toHaveTextContent(/different sign-in method/i);
   });
 
   it('toggles password visibility from the icon button', async () => {
