@@ -1,15 +1,47 @@
-/* === Shell === */
-/* `vh` is declared first as the fallback, then `dvh` so mobile browsers size the shell to the
+/* === Shell ===
+   `vh` is declared first as the fallback, then `dvh` so mobile browsers size the shell to the
    area actually visible once the URL bar is accounted for. Without this the shell is taller than
    the viewport and the bottom of the page hides behind the browser chrome. */
 .app-shell { display: flex; min-height: 100vh; min-height: 100dvh; }
-.main-content { flex: 1; min-width: 0; margin-left: 264px; display: flex; flex-direction: column; }
+
+/* The rail's width lives in one custom property so the sidebar and the content offset can never
+   disagree about how much room the nav is taking. Collapsing the sidebar is therefore a single
+   attribute on the shell rather than a class that has to be applied in two places. The collapsed
+   size is declared as its own token for the same reason: the handle is positioned from it, so the
+   two numbers cannot be edited apart and leave the handle hanging off the rail. */
+:root { --sidebar-width: 264px; --sidebar-width-collapsed: 72px; }
+.app-shell[data-sidebar='collapsed'] { --sidebar-width: var(--sidebar-width-collapsed); }
+
+.main-content {
+  flex: 1; min-width: 0; margin-left: var(--sidebar-width); display: flex; flex-direction: column;
+  transition: margin-left 0.2s ease;
+}
 
 /* === Sidebar === */
 .sidebar {
-  position: fixed; left: 0; top: 0; bottom: 0; width: 264px; background: var(--sidebar-bg);
+  position: fixed; left: 0; top: 0; bottom: 0; width: var(--sidebar-width); background: var(--sidebar-bg);
   border-right: 1px solid var(--border); display: flex; flex-direction: column; z-index: var(--z-sidebar);
+  transition: width 0.2s ease;
 }
+
+/* The single sidebar control, riding the sidebar's right border.
+   It is a sibling of the `<aside>`, not a child, because at drawer widths the closed sidebar is
+   translated off screen and a control inside it would go with it. Left is driven by the same
+   custom property as the rail's width, so the handle tracks the rail exactly — including through
+   the collapse transition — without a second number to keep in step. */
+.sidebar-handle {
+  position: fixed; top: 50%; left: var(--sidebar-width);
+  transform: translate(-50%, -50%);
+  display: grid; place-items: center;
+  width: 22px; height: 52px; padding: 0;
+  border-radius: 0 7px 7px 0;
+  border: 1px solid var(--border); border-left: none;
+  background: var(--surface); color: var(--text-muted);
+  cursor: pointer; z-index: var(--z-sidebar);
+  transition: left 0.2s ease, color 0.15s, background 0.15s;
+}
+.sidebar-handle:hover { color: var(--text); background: var(--surface-2); }
+.sidebar-handle:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
 /* Brand strip. The wordmark is a transparent PNG sized by height, so it drops straight onto the
    sidebar background with no plate or border. The link keeps a real focus ring for keyboard users;
    the top margin leaves the same breathing room the workspace switcher previously had.
@@ -22,6 +54,7 @@
    rather than the product's name, and the 264px rail has room for 144px of lockup at that
    height without crowding the workspace switcher below it. */
 .brand-logo { display: block; height: 48px; width: auto; }
+/* The brand strip holds the wordmark. */
 .sidebar-brand { padding: 22px 20px 6px; }
 /* The anchor wraps the wordmark, so it is the box that needs the focus ring and the hit area. */
 .sidebar-brand-link { display: inline-block; width: fit-content; border-radius: 8px; }
@@ -32,6 +65,10 @@
 .workspace-switch { display: flex; align-items: center; gap: 10px; width: calc(100% - 28px); margin: 12px 14px 8px; padding: 10px 12px; border-radius: 10px; background: var(--surface); border: 1px solid var(--border); text-align: left; transition: border-color 0.15s; }
 .workspace-switch:hover { border-color: var(--border-strong); }
 .workspace-switch > span:nth-child(2) { min-width: 0; }
+/* Workspace name and kind, collapsed to just the initial tile. */
+.workspace-name, .workspace-switch > svg { display: none; }
+.sidebar[data-compact='true'] .workspace-switch { width: auto; margin: 12px auto 8px; padding: 8px; border-color: transparent; background: transparent; justify-content: center; }
+.sidebar[data-compact='true'] .workspace-switch:hover { background: var(--surface); border-color: var(--border); }
 .workspace-icon { width: 30px; height: 30px; border-radius: 7px; background: var(--accent); display: grid; place-items: center; font-weight: 700; font-size: 0.85rem; }
 .workspace-switch b { display: block; font-size: 0.85rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .workspace-switch small { font-size: 0.7rem; }
@@ -43,8 +80,33 @@
 .nav-item:hover { background: var(--surface); color: var(--text); }
 .nav-item.active { background: var(--accent-soft); color: var(--text); }
 .nav-item.active svg { color: var(--accent); }
+.nav-item svg { flex-shrink: 0; }
 .nav-item span { flex: 1; }
 .nav-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--cyan); }
+
+/* === Collapsed rail ===
+   Icons only, so a 1440px screen gives the tables ~190px back. The labels stay in the DOM and in
+   the accessible name — they are hidden visually, not removed — which keeps the links announcing
+   themselves normally and keeps this from being a screen-reader regression. The icon carries
+   `title` in this mode for a sighted mouse user, see `SidebarNavItem`.
+
+   The wordmark is hidden rather than shrunk: at 48px tall it is 144px wide and the rail is 72px,
+   so it cannot keep its agreed size, and a 26px-tall lockup is illegible. The brand strip goes
+   with it, so the rail does not open on an empty row — the workspace switcher's initial tile sits
+   directly below and is the same signal at rail width. */
+.sidebar[data-compact='true'] .sidebar-brand { display: none; }
+.sidebar[data-compact='true'] nav { padding: 8px 10px; }
+.sidebar[data-compact='true'] .nav-label { display: none; }
+.sidebar[data-compact='true'] .nav-item { justify-content: center; padding: 10px 0; }
+.sidebar[data-compact='true'] .nav-item-label,
+.sidebar[data-compact='true'] .nav-dot { display: none; }
+.sidebar[data-compact='true'] .nav-item.active { position: relative; }
+/* The unread/notified dot is the one thing that cannot be expressed as an icon, so it survives
+   the collapse as a marker on the active row's edge. */
+.sidebar[data-compact='true'] .nav-item:has(.nav-dot)::after {
+  content: ''; position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+  width: 5px; height: 5px; border-radius: 50%; background: var(--cyan);
+}
 .sidebar-bottom { padding: 12px 14px; border-top: 1px solid var(--border); }
 .help-card { display: flex; align-items: center; gap: 10px; width: 100%; padding: 12px; border-radius: 10px; background: var(--surface); border: 1px solid var(--border); margin-bottom: 12px; text-align: left; transition: border-color 0.15s; }
 .help-card:hover { border-color: var(--border-strong); }
@@ -59,13 +121,21 @@
 .user-chip b { display: block; font-size: 0.85rem; }
 .user-chip small { font-size: 0.72rem; }
 .user-chip > svg { margin-left: auto; color: var(--text-muted); }
+
+/* The bottom block is the same pattern as the nav: keep the avatar and the help icon, drop the
+   text. The account menu's `aria-label` already names the user, so the chip stays identifiable. */
+.sidebar[data-compact='true'] .help-card { justify-content: center; padding: 10px; }
+.sidebar[data-compact='true'] .help-card > span:not(.help-icon),
+.sidebar[data-compact='true'] .help-card > svg { display: none; }
+.sidebar[data-compact='true'] .user-chip { justify-content: center; padding: 6px 0; }
+.sidebar[data-compact='true'] .user-chip > span,
+.sidebar[data-compact='true'] .user-chip-chevron { display: none; }
 .avatar { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--cyan)); display: grid; place-items: center; font-weight: 600; font-size: 0.8rem; flex-shrink: 0; }
 .avatar-small { width: 30px; height: 30px; font-size: 0.72rem; }
 .avatar-large { width: 64px; height: 64px; font-size: 1.4rem; }
 
 /* === Topbar === */
 .topbar { display: flex; align-items: center; gap: 20px; padding: 18px 28px; border-bottom: 1px solid var(--border); background: var(--bg); position: sticky; top: 0; z-index: var(--z-topbar); }
-.mobile-menu { display: none; }
 .topbar-heading { flex: 1; min-width: 0; }
 .topbar-heading h1 { font-size: 1.4rem; margin-bottom: 2px; }
 .topbar-heading p { font-size: 0.82rem; color: var(--text-muted); }
@@ -149,6 +219,10 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .skip-link { transition: none; }
+  /* The rail resizes over 0.2s, which is a large surface moving at once; without this the
+     sidebar and the content beside it slide for someone who asked for less motion. The handle
+     tracks that width, so it has to stop moving at the same time or it would visibly lag. */
+  .sidebar, .main-content, .sidebar-handle { transition: none; }
 }
 
 /* Banner shown when a Firestore write fails or the database is unreachable. It sits above the page

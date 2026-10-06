@@ -1,12 +1,14 @@
 /* === Responsive ===
    Three tiers, named after the widths the design is checked at:
-     - 991px and below  tablet and phone. The sidebar becomes a drawer behind a hamburger.
+     - 991px and below  tablet and phone. The sidebar becomes a drawer.
      - 768px and below  large phone / small tablet.
      - 640px and below  phone.
 
-   The 992px line is where the hamburger starts, deliberately. `1024px` used to be the cut-off,
-   which put the drawer and its hamburger on screen across the whole `lg` band; the sidebar is a
-   permanent rail from 992px up, so nothing at `lg` or `xl` needs a menu button to reveal it. */
+   The 992px line is deliberate. `1024px` used to be the cut-off, which put the drawer on screen
+   across the whole `lg` band; from 992px up the sidebar is a permanent rail and the header's
+   sidebar button collapses it instead of revealing it. The one value that has to agree across
+   files is this breakpoint, which `DRAWER_BREAKPOINT` in `useMediaQuery.ts` mirrors so the button
+   acts on whichever sidebar behaviour is live; `sidebarLayout.test.ts` asserts the two match. */
 
 /* The marketing panel is hidden below 992px, so its copy of the wordmark must go too and the
    card copy takes over. Doing this as a pair is what guarantees the logo is never shown twice. */
@@ -16,11 +18,23 @@
 }
 
 @media (max-width: 991px) {
+  /* The drawer is an overlay, so it takes no space in the flow and the shell's collapsed width is
+     irrelevant here. This has to out-specify `.app-shell[data-sidebar='collapsed']`, not `:root` —
+     an attribute selector beats a type selector on specificity, so a `:root` override here would
+     lose and a stored "collapsed" preference would shrink the drawer to a 72px sliver. */
+  .app-shell[data-sidebar='collapsed'] { --sidebar-width: 264px; }
   .main-content { margin-left: 0; }
   .sidebar { transform: translateX(-100%); transition: transform 0.25s; }
   .sidebar-open { transform: translateX(0); }
   .sidebar-backdrop { display: block; }
-  .mobile-menu { display: grid; }
+
+  /* The closed drawer is translated off the left edge, so its handle has to sit on the viewport
+     edge instead of riding a sidebar that is not there. When the drawer is open the handle moves
+     in to the drawer's own edge and becomes the close control, which is the only visible way out
+     for someone who cannot use the backdrop or Escape. */
+  .sidebar-handle { left: 0; transform: translateY(-50%); border-radius: 0 7px 7px 0; border-left: 1px solid var(--border); }
+  body[data-nav-open='true'] .sidebar-handle { left: 264px; transform: translate(-50%, -50%); border-left: none; }
+
   .top-grid { grid-template-columns: 1fr; }
   .bottom-grid { grid-template-columns: 1fr; }
   .stats-grid { grid-template-columns: repeat(2, 1fr); }

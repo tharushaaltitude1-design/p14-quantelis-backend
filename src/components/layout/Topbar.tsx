@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { ChevronDown, LogOut, Menu as MenuIcon, Plus, Search, Settings, ShieldCheck, User } from 'lucide-react';
+import { ChevronDown, LogOut, Plus, Search, Settings, ShieldCheck, User } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { pageMeta } from './pageMeta';
 import { NotificationsMenu } from './NotificationsMenu';
@@ -13,7 +13,7 @@ import { useWorkspace, useWorkspaceDispatch } from '@/state/workspaceContext';
 import { useAuth } from '@/state/authContext';
 import { ROUTES } from '@/config/constants';
 
-export function Topbar({ onOpenNav }: { onOpenNav: () => void }) {
+export function Topbar() {
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const dispatch = useWorkspaceDispatch();
@@ -57,9 +57,6 @@ export function Topbar({ onOpenNav }: { onOpenNav: () => void }) {
 
   return (
     <header className="topbar">
-      <button className="icon-button mobile-menu" onClick={onOpenNav} aria-label="Open navigation">
-        <MenuIcon size={20} />
-      </button>
       <div className="topbar-heading">
         <span className="eyebrow">WORKSPACE / QUANTELIS</span>
         <h1>{page.title}</h1>

@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { BookOpen, Building2, Check, ChevronDown, ChevronRight, CircleHelp, LogOut, Settings, ShieldCheck, User } from 'lucide-react';
+import { BookOpen, Building2, Check, ChevronDown, ChevronRight, CircleHelp, LogOut, PanelLeftClose, PanelLeftOpen, Settings, ShieldCheck, User } from 'lucide-react';
 import { NAV_GENERAL, NAV_PRIMARY, type NavItem } from '@/config/nav';
 import { useEscapeKey } from '@/hooks/useEscapeKey';
 import { useScrollLock } from '@/hooks/useScrollLock';
+import type { SidebarLayout } from '@/hooks/useSidebarLayout';
 import { Popover } from '@/components/ui/Popover';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { useWorkspace, useWorkspaceDispatch } from '@/state/workspaceContext';
@@ -19,12 +20,24 @@ const WORKSPACES = [
   { id: 'research', name: 'Research Sandbox', kind: 'Personal', initial: 'R' },
 ];
 
-function SidebarNavItem({ item, onNavigate }: { item: NavItem; onNavigate: () => void }) {
+/**
+ * `compact` hides the label to leave an icon-only rail. The label stays in the DOM and in the
+ * accessible name either way; it is only visually removed, so the link keeps its name and a
+ * screen-reader user is unaffected. `title` is added in compact mode because the text is no
+ * longer visible to hover for a sighted mouse user.
+ */
+function SidebarNavItem({ item, onNavigate, compact }: { item: NavItem; onNavigate: () => void; compact: boolean }) {
   const Icon = item.icon;
   return (
-    <NavLink to={item.to} end={item.to === '/'} onClick={onNavigate} className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-      <Icon size={17} />
-      <span>{item.label}</span>
+    <NavLink
+      to={item.to}
+      end={item.to === '/'}
+      onClick={onNavigate}
+      className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
+      title={compact ? item.label : undefined}
+    >
+      <Icon size={17} aria-hidden="true" />
+      <span className="nav-item-label">{item.label}</span>
       {item.dot && <span className="nav-dot" />}
     </NavLink>
   );
@@ -50,7 +63,7 @@ function WorkspaceSwitcher() {
         aria-label={`Workspace: ${active.name}. Change workspace`}
       >
         <span className="workspace-icon">{active.initial}</span>
-        <span>
+        <span className="workspace-name">
           <b>{active.name}</b>
           <small>{active.kind}</small>
         </span>
@@ -110,7 +123,7 @@ function WorkspaceSwitcher() {
   );
 }
 
-export function Sidebar({ mobileOpen, onClose }: { mobileOpen: boolean; onClose: () => void }) {
+export function Sidebar({ layout, onClose }: { layout: SidebarLayout; onClose: () => void }) {
   const navigate = useNavigate();
   const [confirmSignOut, setConfirmSignOut] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
@@ -118,6 +131,24 @@ export function Sidebar({ mobileOpen, onClose }: { mobileOpen: boolean; onClose:
   const { profile } = useWorkspace();
   const dispatch = useWorkspaceDispatch();
   const { signOut, user } = useAuth();
+
+  // The drawer state is the live one here. `onClose` is passed separately so the two dismissal
+  // paths — this component's own close control and the backdrop — cannot drift.
+  const mobileOpen = layout.isDrawer && layout.drawerOpen;
+  const compact = layout.collapsed && !layout.isDrawer;
+
+  // One control for the whole sidebar, living on the sidebar's own edge rather than in the header.
+  // Wide, it collapses the rail so the tables get the width back; narrow, the sidebar is an
+  // overlay drawer and the same button opens and closes it. A control in the header would have had
+  // to be hidden or disabled at one width or the other to avoid being a duplicate.
+  const sidebarLabel = layout.isDrawer
+    ? mobileOpen
+      ? 'Close navigation'
+      : 'Open navigation'
+    : compact
+      ? 'Expand sidebar'
+      : 'Collapse sidebar';
+  const sidebarExpanded = layout.isDrawer ? mobileOpen : !compact;
 
   // Prefer the live Firebase account for name/photo so a Google avatar appears on first paint,
   // rather than waiting for `useProfileSync` to write it into the store.
@@ -138,9 +169,9 @@ export function Sidebar({ mobileOpen, onClose }: { mobileOpen: boolean; onClose:
   }, [signOut, dispatch, navigate]);
 
   useEscapeKey(mobileOpen, onClose);
-  // Matches the breakpoint in responsive.css: the sidebar is a fixed rail above it and a drawer
-  // below it, so only the drawer needs the page behind it frozen.
-  useScrollLock(mobileOpen && window.matchMedia('(max-width: 991px)').matches);
+  // Only the drawer needs the page behind it frozen; the collapsed rail is in the page flow and
+  // scrolling must keep working when it is reduced to icons.
+  useScrollLock(mobileOpen);
   useEffect(() => {
     document.body.dataset.navOpen = String(mobileOpen);
     return () => {
@@ -150,8 +181,32 @@ export function Sidebar({ mobileOpen, onClose }: { mobileOpen: boolean; onClose:
 
   return (
     <>
-      {mobileOpen && <button className="sidebar-backdrop" onClick={onClose} aria-label="Close navigation" />}
-      <aside className={`sidebar ${mobileOpen ? 'sidebar-open' : ''}`}>
+      {/* The backdrop is a pointer convenience for dismissing the drawer by clicking away from
+          it. It is hidden from assistive tech on purpose: the drawer carries its own close button
+          and Escape already covers the keyboard, so announcing this would offer a third control
+          with the same name and no extra capability. */}
+      {mobileOpen && (
+        <button className="sidebar-backdrop" onClick={onClose} tabIndex={-1} aria-hidden="true" />
+      )}
+      {/* Straddling the sidebar's edge, the way a collapsed panel's handle is expected to sit, so
+          it stays reachable whether the rail is 264px or 72px wide — and, as a sibling of the
+          `<aside>` rather than a child of it, it is still on screen when the closed drawer has
+          been translated off the left edge. */}
+      <button
+        type="button"
+        className="sidebar-handle"
+        onClick={layout.isDrawer && mobileOpen ? onClose : layout.toggle}
+        aria-label={sidebarLabel}
+        aria-expanded={sidebarExpanded}
+        aria-controls="app-sidebar"
+      >
+        {sidebarExpanded ? <PanelLeftClose size={15} aria-hidden="true" /> : <PanelLeftOpen size={15} aria-hidden="true" />}
+      </button>
+      <aside
+        className={`sidebar ${mobileOpen ? 'sidebar-open' : ''}`}
+        id="app-sidebar"
+        data-compact={compact ? 'true' : 'false'}
+      >
         <div className="sidebar-brand">
           {/* Points at the marketing site rather than the dashboard, so a click on the wordmark
               does not navigate away from the app. A plain anchor, not a router <Link>, because
@@ -170,11 +225,11 @@ export function Sidebar({ mobileOpen, onClose }: { mobileOpen: boolean; onClose:
         <nav aria-label="Primary">
           <span className="nav-label">Workspace</span>
           {NAV_PRIMARY.map((item) => (
-            <SidebarNavItem key={item.to} item={item} onNavigate={onClose} />
+            <SidebarNavItem key={item.to} item={item} onNavigate={onClose} compact={compact} />
           ))}
           <span className="nav-label nav-label-spaced">General</span>
           {NAV_GENERAL.map((item) => (
-            <SidebarNavItem key={item.to} item={item} onNavigate={onClose} />
+            <SidebarNavItem key={item.to} item={item} onNavigate={onClose} compact={compact} />
           ))}
         </nav>
         <div className="sidebar-bottom">

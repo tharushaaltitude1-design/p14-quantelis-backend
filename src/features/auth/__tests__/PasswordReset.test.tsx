@@ -1,4 +1,5 @@
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { StrictMode } from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
@@ -23,9 +24,9 @@ const renderForgot = (auth = makeAuthValue(), state: unknown = undefined) => {
   return { user, auth };
 };
 
-const renderReset = (auth = makeAuthValue(), query = '?oobCode=code-123') => {
+const renderReset = (auth = makeAuthValue(), query = '?oobCode=code-123', { strict = false } = {}) => {
   const user = userEvent.setup();
-  render(
+  const tree = (
     <MemoryRouter initialEntries={[`/reset-password${query}`]}>
       <AuthTestProvider value={auth}>
         <Routes>
@@ -34,10 +35,18 @@ const renderReset = (auth = makeAuthValue(), query = '?oobCode=code-123') => {
           <Route path="/login" element={<h1>Sign in</h1>} />
         </Routes>
       </AuthTestProvider>
-    </MemoryRouter>,
+    </MemoryRouter>
   );
-  return { user, auth };
+  const { unmount } = render(strict ? <StrictMode>{tree}</StrictMode> : tree);
+  return { user, auth, unmount };
 };
+
+// The reset code is remembered for the tab, so the store has to start clean or one test's link
+// would quietly authenticate the next one's "missing code" screen.
+beforeEach(() => {
+  window.sessionStorage.clear();
+  window.location.hash = '';
+});
 
 describe('ForgotPasswordPage', () => {
   it('rejects an empty or malformed address before calling Firebase', async () => {
@@ -150,5 +159,63 @@ describe('ResetPasswordPage', () => {
 
     expect(await screen.findByRole('alert')).toHaveTextContent(/has expired or has already been used/i);
     expect(screen.queryByText(/your password has been changed/i)).not.toBeInTheDocument();
+  });
+
+  /**
+   * The regression this whole pass exists for: a verification effect guarded by a "already checked
+   * this code" ref. React's development double-invoke ran the effect once, threw away that run's
+   * result in cleanup, then skipped the second run — leaving the screen on "Checking your reset
+   * link…" forever. Verifying does not consume the code, so re-running it is the correct behaviour.
+   */
+  it('still reaches the form when the effect is double-invoked', async () => {
+    renderReset(makeAuthValue(), '?oobCode=code-123', { strict: true });
+    expect(await screen.findByLabelText(/^new password$/i)).toBeInTheDocument();
+  });
+
+  it('accepts a link whose parameters arrived in the fragment', async () => {
+    window.location.hash = '#oobCode=frag-1';
+    const { auth } = renderReset(makeAuthValue(), '');
+    expect(await screen.findByLabelText(/^new password$/i)).toBeInTheDocument();
+    expect(auth.verifyResetCode).toHaveBeenCalledWith('frag-1');
+  });
+
+  it('completes the reset after the query string is lost, using the tab copy', async () => {
+    const { user, auth, unmount } = renderReset();
+    await screen.findByLabelText(/^new password$/i);
+    unmount();
+
+    // A reload, a restored tab or a mail client that strips the query all land on a bare
+    // `/reset-password`. The email is still good, so the reset must still be finishable.
+    renderReset(auth, '');
+    expect(await screen.findByLabelText(/^new password$/i)).toBeInTheDocument();
+    await user.type(screen.getByLabelText(/^new password$/i), 'forecast2026');
+    await user.type(screen.getByLabelText(/confirm new password/i), 'forecast2026');
+    await user.click(screen.getByRole('button', { name: /save new password/i }));
+
+    expect(await screen.findByText(/your password has been changed/i)).toBeInTheDocument();
+    expect(auth.confirmPasswordReset).toHaveBeenCalledWith('code-123', 'forecast2026');
+  });
+
+  it('stops offering a code once it has been spent', async () => {
+    const { user, auth, unmount } = renderReset();
+    await screen.findByLabelText(/^new password$/i);
+    await user.type(screen.getByLabelText(/^new password$/i), 'forecast2026');
+    await user.type(screen.getByLabelText(/confirm new password/i), 'forecast2026');
+    await user.click(screen.getByRole('button', { name: /save new password/i }));
+    await screen.findByText(/your password has been changed/i);
+    unmount();
+
+    renderReset(auth, '');
+    expect(await screen.findByRole('alert')).toHaveTextContent(/missing its reset code/i);
+  });
+
+  it('drops a refused code so the next visit asks for a new one', async () => {
+    const auth = makeAuthValue({ verifyResetCode: vi.fn().mockRejectedValue(new Error('That reset link has expired or has already been used. Request a new one.')) });
+    const { unmount } = renderReset(auth);
+    await screen.findByRole('alert');
+    unmount();
+
+    renderReset(auth, '');
+    expect(await screen.findByRole('alert')).toHaveTextContent(/missing its reset code/i);
   });
 });
