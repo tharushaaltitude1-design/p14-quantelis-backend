@@ -42,6 +42,22 @@
 }
 .sidebar-handle:hover { color: var(--text); background: var(--surface-2); }
 .sidebar-handle:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+
+/* Close control for the overlay drawer, pinned to the sidebar's top-right where a sliding menu's
+   dismiss button is expected. It is hidden by default and only revealed at drawer widths (see
+   responsive.css), because a permanent rail has nothing to close — there the handle collapses it
+   instead. */
+.sidebar-close {
+  position: absolute; top: 12px; right: 12px; z-index: 2;
+  display: none; place-items: center;
+  width: 32px; height: 32px; padding: 0;
+  border-radius: 8px; border: 1px solid transparent;
+  background: transparent; color: var(--text-muted);
+  cursor: pointer; transition: color 0.15s, background 0.15s, border-color 0.15s;
+}
+.sidebar-close:hover { color: var(--text); background: var(--surface); border-color: var(--border); }
+.sidebar-close:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+
 /* Brand strip. The wordmark is a transparent PNG sized by height, so it drops straight onto the
    sidebar background with no plate or border. The link keeps a real focus ring for keyboard users;
    the top margin leaves the same breathing room the workspace switcher previously had.

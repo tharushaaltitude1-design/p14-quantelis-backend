@@ -35,6 +35,10 @@
   .sidebar-handle { left: 0; transform: translateY(-50%); border-radius: 0 7px 7px 0; border-left: 1px solid var(--border); }
   body[data-nav-open='true'] .sidebar-handle { left: 264px; transform: translate(-50%, -50%); border-left: none; }
 
+  /* The drawer's top-right close button only exists at drawer widths; the rail relies on the
+     edge handle instead. */
+  .sidebar-close { display: grid; }
+
   .top-grid { grid-template-columns: 1fr; }
   .bottom-grid { grid-template-columns: 1fr; }
   .stats-grid { grid-template-columns: repeat(2, 1fr); }
@@ -99,6 +103,14 @@
   .role-badge, .current-device { margin-left: 0; }
   .input-with-action { flex-wrap: wrap; }
   .usage-line span { flex-wrap: wrap; gap: 4px; }
+  .security-grid { grid-template-columns: 1fr; }
+  .security-toggle { flex-wrap: wrap; gap: 10px; }
+  .security-toggle .toggle { margin-left: 0; width: 100%; }
+  .security-toggle .toggle > button { width: 100%; justify-content: space-between; }
+  .session-row { flex-wrap: wrap; gap: 10px; }
+  .session-row .current-device,
+  .session-row .text-button { margin-left: 0; width: 100%; }
+  .device-icon { flex-shrink: 0; }
 }
 
 @media (max-width: 640px) {

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { BookOpen, Building2, Check, ChevronDown, ChevronRight, CircleHelp, LogOut, PanelLeftClose, PanelLeftOpen, Settings, ShieldCheck, User } from 'lucide-react';
+import { BookOpen, Building2, Check, ChevronDown, ChevronRight, CircleHelp, LogOut, PanelLeftClose, PanelLeftOpen, Settings, ShieldCheck, User, X } from 'lucide-react';
 import { NAV_GENERAL, NAV_PRIMARY, type NavItem } from '@/config/nav';
 import { useEscapeKey } from '@/hooks/useEscapeKey';
 import { useScrollLock } from '@/hooks/useScrollLock';
@@ -207,6 +207,17 @@ export function Sidebar({ layout, onClose }: { layout: SidebarLayout; onClose: (
         id="app-sidebar"
         data-compact={compact ? 'true' : 'false'}
       >
+        {/* An explicit close control in the drawer's top-right corner, where a sliding menu's
+            dismiss button is expected to be. It only renders as a way out of the overlay drawer,
+            so the stylesheet hides it wherever the sidebar is a permanent rail. */}
+        <button
+          type="button"
+          className="sidebar-close"
+          onClick={onClose}
+          aria-label="Close menu"
+        >
+          <X size={18} aria-hidden="true" />
+        </button>
         <div className="sidebar-brand">
           {/* Points at the marketing site rather than the dashboard, so a click on the wordmark
               does not navigate away from the app. A plain anchor, not a router <Link>, because
